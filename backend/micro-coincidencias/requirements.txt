@@ -1,0 +1,48 @@
+# =============================================================
+#  Sanos & Salvos — Motor de Coincidencias
+#  Python 3.11
+# =============================================================
+
+# ── API ───────────────────────────────────────────────────────
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+gunicorn==23.0.0
+
+# ── Base de datos ─────────────────────────────────────────────
+sqlalchemy==2.0.35
+psycopg2-binary==2.9.9
+pgvector==0.3.2          # cliente Python para pgvector (embeddings en PG)
+
+# ── Kafka ─────────────────────────────────────────────────────
+aiokafka==0.11.0         # cliente Kafka async (compatible con FastAPI)
+
+# ── ML: Texto ─────────────────────────────────────────────────
+sentence-transformers==3.1.1   # embeddings de texto en español
+# Modelo usado: paraphrase-multilingual-mpnet-base-v2 (~420MB)
+# Soporta español nativamente
+
+# ── ML: Imágenes ─────────────────────────────────────────────
+# CLIP de OpenAI para embeddings visuales (ViT-B/32, ~340MB)
+git+https://github.com/openai/CLIP.git
+
+# PyTorch CPU-only (evitar imagen Docker con CUDA de ~4GB)
+# Se instala via URL en el Dockerfile para mayor control de versión
+# torch==2.4.1+cpu  ← ver Dockerfile
+
+# ── Similitud de texto ────────────────────────────────────────
+rapidfuzz==3.10.0        # fuzzy matching para nombre, raza, color
+
+# ── Imágenes ─────────────────────────────────────────────────
+Pillow==10.4.0
+requests==2.32.3         # para descargar fotos desde MinIO
+
+# ── Matemáticas / ML ─────────────────────────────────────────
+numpy==1.26.4
+scikit-learn==1.5.2      # cosine_similarity
+
+# ── Geo ───────────────────────────────────────────────────────
+haversine==2.8.1         # distancia entre coordenadas lat/lng
+
+# ── Config ───────────────────────────────────────────────────
+pydantic-settings==2.5.2
+python-dotenv==1.0.1

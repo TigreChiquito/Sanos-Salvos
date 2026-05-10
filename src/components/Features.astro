@@ -1,0 +1,404 @@
+---
+// src/components/Features.astro
+
+const steps = [
+  {
+    title: "Haz tu reporte en segundos",
+    desc: "Completa un formulario rápido con la foto, descripción y ubicación de tu mascota. Sin cuentas, sin complicaciones — solo ayuda.",
+    bullets: [
+      "Sube una foto clara de tu mascota",
+      "Indica la zona donde fue vista por última vez",
+      "Agrega un número de contacto directo",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=900&q=80&auto=format&fit=crop",
+    alt: "Persona reportando mascota perdida desde su teléfono",
+    tint: "tint-terra",
+    reverse: false,
+  },
+  {
+    title: "Aparece en el mapa al instante",
+    desc: "Tu reporte se publica en tiempo real en el mapa interactivo. Cualquier persona en tu zona puede verlo, filtrarlo y compartirlo.",
+    bullets: [
+      "Mapa en tiempo real con pines por zona",
+      "Filtros por tipo: perdido o encontrado",
+      "Visible desde móvil o computadora",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=900&q=80&auto=format&fit=crop",
+    alt: "Mapa interactivo con reportes de mascotas",
+    tint: "tint-sage",
+    reverse: true,
+  },
+  {
+    title: "La comunidad entra en acción",
+    desc: "Vecinos, voluntarios y amantes de los animales reciben alertas y comparten tu reporte. Cuantos más ojos, más rápido el reencuentro.",
+    bullets: [
+      "Alertas automáticas a usuarios cercanos",
+      "Fácil de compartir en redes sociales",
+      "Contacto directo sin intermediarios",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=900&q=80&auto=format&fit=crop",
+    alt: "Comunidad de personas ayudando a encontrar mascotas",
+    tint: "tint-gold",
+    reverse: false,
+  },
+  {
+    title: "El reencuentro que tanto esperabas",
+    desc: "Una vez reunidos, marca el reporte como resuelto. Cada historia feliz inspira a más personas a seguir ayudando.",
+    bullets: [
+      "Cierra tu reporte con un clic",
+      "Comparte tu historia de éxito",
+      "Ayuda a que otros también lo logren",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1601758174493-ab843c9e0d66?w=900&q=80&auto=format&fit=crop",
+    alt: "Persona reunida felizmente con su mascota",
+    tint: "tint-green",
+    reverse: true,
+  },
+];
+---
+
+<section class="features" id="como-funciona">
+  <div class="section-header">
+    <div class="section-tag">🐾 Cómo funciona</div>
+    <h2 class="section-title">
+      Cuatro pasos hacia<br /><em>el reencuentro.</em>
+    </h2>
+    <p class="section-sub">
+      Simple, rápido y respaldado por una comunidad que se preocupa tanto como
+      tú.
+    </p>
+  </div>
+
+  {
+    steps.map((step, i) => (
+      <>
+        <div class={`feature-row ${step.reverse ? "reverse" : ""}`} data-aos>
+          <div class={`feature-img ${step.tint}`}>
+            <img src={step.image} alt={step.alt} loading="lazy" />
+          </div>
+          <div class="feature-text">
+            <h3 class="feature-title">{step.title}</h3>
+            <p class="feature-desc">{step.desc}</p>
+            <ul class="feature-bullets">
+              {step.bullets.map((b) => (
+                <li>
+                  <span class="bullet-dot" />
+                  {b}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        {i < steps.length - 1 && (
+          <div class="connector">
+            <span class="connector-paw">🐾</span>
+          </div>
+        )}
+      </>
+    ))
+  }
+
+  <div class="features-cta">
+    <p>¿Listo para encontrar a<br /><em>quien más quieres?</em></p>
+    <a href="/reportar" class="btn-cta">🐾 Hacer un reporte ahora</a>
+  </div>
+</section>
+
+<style>
+  .features {
+    padding: 7rem 0;
+    overflow: hidden;
+    background: var(--cream);
+  }
+
+  .section-header {
+    text-align: center;
+    padding: 0 2rem;
+    margin-bottom: 6rem;
+  }
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--terra-l);
+    color: var(--terra-d);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.35rem 1rem;
+    border-radius: 999px;
+    margin-bottom: 1.2rem;
+  }
+  .section-title {
+    font-family: "Fraunces", serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 4vw, 3rem);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--brown);
+    margin-bottom: 1rem;
+  }
+  .section-title em {
+    font-style: italic;
+    color: var(--terra);
+  }
+  .section-sub {
+    font-size: 1.05rem;
+    color: var(--brown-m);
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.65;
+  }
+
+  .feature-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(40px);
+    transition:
+      opacity 0.7s ease,
+      transform 0.7s ease;
+  }
+  .feature-row.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .feature-row.reverse .feature-img {
+    order: 2;
+  }
+  .feature-row.reverse .feature-text {
+    order: 1;
+  }
+
+  .feature-img {
+    position: relative;
+    height: 500px;
+    overflow: hidden;
+  }
+  .feature-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+  .feature-row:hover .feature-img img {
+    transform: scale(1.04);
+  }
+
+  .step-badge {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    width: 52px;
+    height: 52px;
+    background: white;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Fraunces", serif;
+    font-weight: 900;
+    font-size: 1.4rem;
+    color: var(--terra);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14);
+    z-index: 2;
+  }
+  .feature-row.reverse .step-badge {
+    left: auto;
+    right: 2rem;
+  }
+
+  .feature-img::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.18;
+    transition: opacity 0.3s;
+  }
+  .feature-row:hover .feature-img::after {
+    opacity: 0.1;
+  }
+  .tint-terra::after {
+    background: var(--terra);
+  }
+  .tint-sage::after {
+    background: var(--sage);
+  }
+  .tint-gold::after {
+    background: var(--gold);
+  }
+  .tint-green::after {
+    background: #3a6b28;
+  }
+
+  .feature-text {
+    padding: 4rem 5rem;
+    background: var(--cream);
+  }
+  .feature-row:nth-child(even) .feature-text {
+    background: var(--sand);
+  }
+
+  .feature-icon {
+    font-size: 2.2rem;
+    margin-bottom: 1.2rem;
+    display: block;
+  }
+  .feature-step {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--terra);
+    margin-bottom: 0.6rem;
+  }
+  .feature-title {
+    font-family: "Fraunces", serif;
+    font-weight: 900;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--brown);
+    margin-bottom: 1.1rem;
+  }
+  .feature-desc {
+    font-size: 1rem;
+    color: var(--brown-m);
+    line-height: 1.7;
+    margin-bottom: 1.8rem;
+    max-width: 400px;
+  }
+  .feature-bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    list-style: none;
+  }
+  .feature-bullets li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    font-size: 0.92rem;
+    color: var(--brown-m);
+    font-weight: 600;
+  }
+  .bullet-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--terra);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 0.38rem;
+  }
+
+  .connector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem 0;
+    background: var(--cream);
+    position: relative;
+  }
+  .connector::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--terra-l);
+  }
+  .connector-paw {
+    position: relative;
+    z-index: 1;
+    background: var(--cream);
+    padding: 0.3rem;
+    font-size: 1.1rem;
+    opacity: 0.6;
+  }
+
+  .features-cta {
+    text-align: center;
+    padding: 5rem 2rem 0;
+  }
+  .features-cta p {
+    font-family: "Fraunces", serif;
+    font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+    font-weight: 700;
+    color: var(--brown);
+    margin-bottom: 1.8rem;
+    letter-spacing: -0.01em;
+  }
+  .features-cta p em {
+    font-style: italic;
+    color: var(--terra);
+  }
+
+  .btn-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: "Nunito", sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 1rem 2.2rem;
+    border-radius: 14px;
+    text-decoration: none;
+    background: var(--terra);
+    color: white;
+    box-shadow: 0 4px 24px rgba(196, 92, 58, 0.35);
+    transition:
+      transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.18s;
+  }
+  .btn-cta:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(196, 92, 58, 0.45);
+  }
+
+  @media (max-width: 768px) {
+    .feature-row,
+    .feature-row.reverse {
+      grid-template-columns: 1fr;
+    }
+    .feature-row.reverse .feature-img {
+      order: 0;
+    }
+    .feature-row.reverse .feature-text {
+      order: 1;
+    }
+    .feature-img {
+      height: 280px;
+    }
+    .feature-text {
+      padding: 2.5rem 1.5rem;
+    }
+    .step-badge,
+    .feature-row.reverse .step-badge {
+      left: 1.2rem;
+      right: auto;
+    }
+  }
+</style>
+
+<script>
+  const rows = document.querySelectorAll(".feature-row");
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("visible");
+          observer.unobserve(e.target);
+        }
+      });
+    },
+    { threshold: 0.15 },
+  );
+  rows.forEach((r) => observer.observe(r));
+</script>

@@ -1,0 +1,132 @@
+---
+// src/components/FAQ.astro
+
+const faqs = [
+  {
+    q: '¿Es gratuito usar Sanos & Salvos?',
+    a: 'Sí, completamente gratuito. Reportar una mascota perdida o encontrada no tiene ningún costo. Nuestra misión es ayudar a reunir familias con sus mascotas, sin barreras.',
+  },
+  {
+    q: '¿Necesito crear una cuenta para hacer un reporte?',
+    a: 'No. Puedes crear un reporte sin registrarte — solo necesitas un número de contacto para que quien encuentre a tu mascota pueda comunicarse contigo directamente.',
+  },
+  {
+    q: '¿Qué tipo de mascotas puedo reportar?',
+    a: 'Principalmente perros y gatos, aunque también puedes reportar otras mascotas domésticas. Cuanta más información y fotos incluyas, más fácil será identificarla para la comunidad.',
+  },
+  {
+    q: '¿Cómo me avisan si alguien encontró a mi mascota?',
+    a: 'El contacto es directo: quien encuentre tu reporte en el mapa se comunicará contigo por el número que dejaste. Sin intermediarios, sin esperas innecesarias.',
+  },
+  {
+    q: '¿Qué hago si encuentro una mascota en la calle?',
+    a: 'Primero revisa el mapa para ver si ya hay un reporte que coincida. Si no encuentras nada, crea un reporte de "mascota encontrada" con una foto y la zona donde la hallaste. La comunidad hará el resto.',
+  },
+  {
+    q: '¿Por cuánto tiempo permanece activo mi reporte?',
+    a: 'Los reportes se mantienen activos hasta que tú los marques como resueltos. Te recomendamos cerrarlo una vez que tu mascota haya sido encontrada, para mantener el mapa actualizado para todos.',
+  },
+  {
+    q: '¿Puedo ayudar si no perdí ni encontré ninguna mascota?',
+    a: '¡Por supuesto! Revisa el mapa regularmente y comparte los reportes en tus redes sociales. A veces un simple "compartir" es lo que hace que una mascota vuelva a casa.',
+  },
+];
+---
+
+<section class="faq" id="faq">
+  <div class="faq-inner">
+    <div class="faq-header">
+      <div class="section-tag">❓ Preguntas frecuentes</div>
+      <h2 class="section-title">Todo lo que necesitas<br /><em>saber.</em></h2>
+      <p class="section-sub">Si tienes alguna duda que no esté aquí, escríbenos directamente.</p>
+    </div>
+
+    <div class="faq-list">
+      {faqs.map((item, i) => (
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false" data-index={i}>
+            <span>{item.q}</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <p>{item.a}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq { background: var(--sand); padding: 7rem 0; }
+  .faq-inner { max-width: 780px; margin: 0 auto; padding: 0 2rem; }
+  .faq-header { text-align: center; margin-bottom: 4rem; }
+
+  .section-tag {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--terra-l); color: var(--terra-d);
+    font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.35rem 1rem; border-radius: 999px; margin-bottom: 1.2rem;
+  }
+  .section-title {
+    font-family: 'Fraunces', serif; font-weight: 900;
+    font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -0.02em; line-height: 1.1;
+    color: var(--brown); margin-bottom: 1rem;
+  }
+  .section-title em { font-style: italic; color: var(--terra); }
+  .section-sub { font-size: 1.05rem; color: var(--brown-m); max-width: 500px; margin: 0 auto; line-height: 1.65; }
+
+  .faq-list {
+    display: flex; flex-direction: column;
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 4px 40px rgba(45,27,18,0.08);
+  }
+  .faq-item { background: var(--cream); border-bottom: 1px solid rgba(196,92,58,0.10); }
+  .faq-item:last-child { border-bottom: none; }
+
+  .faq-question {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 1.4rem 2rem; background: none; border: none; cursor: pointer; text-align: left;
+    font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700; color: var(--brown);
+    transition: background 0.2s, color 0.2s;
+  }
+  .faq-question:hover { background: rgba(196,92,58,0.04); color: var(--terra); }
+  .faq-question[aria-expanded="true"] { color: var(--terra); background: rgba(196,92,58,0.05); }
+
+  .faq-icon {
+    font-size: 1.4rem; font-weight: 300; color: var(--terra); flex-shrink: 0;
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; background: var(--terra-l); line-height: 1;
+    transition: transform 0.3s cubic-bezier(.34,1.56,.64,1), background 0.2s;
+  }
+  .faq-question[aria-expanded="true"] .faq-icon {
+    transform: rotate(45deg); background: var(--terra); color: white;
+  }
+
+  .faq-answer {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), padding 0.3s ease;
+    padding: 0 2rem;
+  }
+  .faq-answer.open { max-height: 200px; padding: 0 2rem 1.4rem; }
+  .faq-answer p {
+    font-size: 0.97rem; color: var(--brown-m); line-height: 1.7;
+    border-left: 3px solid var(--terra-l); padding-left: 1rem;
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.faq-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isOpen = btn.getAttribute('aria-expanded') === 'true';
+      document.querySelectorAll('.faq-question').forEach(b => {
+        b.setAttribute('aria-expanded', 'false');
+        (b.nextElementSibling as HTMLElement)?.classList.remove('open');
+      });
+      if (!isOpen) {
+        btn.setAttribute('aria-expanded', 'true');
+        (btn.nextElementSibling as HTMLElement)?.classList.add('open');
+      }
+    });
+  });
+</script>

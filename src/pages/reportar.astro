@@ -1,0 +1,774 @@
+---
+// src/pages/reportar.astro
+import BaseLayout  from '../layouts/BaseLayout.astro';
+import NavbarApp   from '../components/NavbarApp.astro';
+---
+
+<BaseLayout
+  title="Reportar — Sanos & Salvos"
+  description="Publica un reporte de mascota perdida o encontrada en tu zona."
+>
+  <NavbarApp active="reportar" />
+
+  <div class="rp-page">
+
+    <!-- ── HEADER ── -->
+    <header class="rp-header">
+      <div class="rp-header-inner">
+        <span class="rp-header-tag">Nueva publicación</span>
+        <h1 class="rp-title">Crear reporte</h1>
+        <p class="rp-subtitle">
+          Completa los campos y marca la ubicación en el mapa.<br />
+          Tu reporte será visible para toda la comunidad al instante.
+        </p>
+      </div>
+    </header>
+
+    <!-- ── FORM ── -->
+    <form class="rp-form" id="rp-form" novalidate>
+      <div class="rp-columns">
+
+        <!-- ─── LEFT: campos ─── -->
+        <div class="rp-fields">
+
+          <!-- Tipo de reporte -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">1</span>Tipo de reporte
+            </h2>
+            <div class="rp-radio-row">
+              <label class="rp-radio-pill" data-value="perdido">
+                <input type="radio" name="tipo" value="perdido" required />
+                <span class="rp-radio-inner">
+                  <span class="rp-radio-dot perdido"></span>
+                  Perdido
+                </span>
+              </label>
+              <label class="rp-radio-pill" data-value="encontrado">
+                <input type="radio" name="tipo" value="encontrado" />
+                <span class="rp-radio-inner">
+                  <span class="rp-radio-dot encontrado"></span>
+                  Encontrado
+                </span>
+              </label>
+            </div>
+          </section>
+
+          <!-- Tipo de animal -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">2</span>Animal
+            </h2>
+            <div class="rp-radio-row">
+              <label class="rp-radio-pill" data-value="perro">
+                <input type="radio" name="animal" value="perro" required />
+                <span class="rp-radio-inner">🐕 Perro</span>
+              </label>
+              <label class="rp-radio-pill" data-value="gato">
+                <input type="radio" name="animal" value="gato" />
+                <span class="rp-radio-inner">🐱 Gato</span>
+              </label>
+              <label class="rp-radio-pill" data-value="otro">
+                <input type="radio" name="animal" value="otro" />
+                <span class="rp-radio-inner">🐾 Otro</span>
+              </label>
+            </div>
+          </section>
+
+          <!-- Nombre -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">3</span>Nombre del animal
+              <span class="rp-optional">opcional</span>
+            </h2>
+            <input
+              type="text" name="nombre"
+              class="rp-input" placeholder="Ej: Max, Luna, Michi…"
+              autocomplete="off"
+            />
+          </section>
+
+          <!-- Características físicas -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">4</span>Características físicas
+            </h2>
+            <div class="rp-fields-grid">
+              <div class="rp-field">
+                <label for="f-raza">Raza</label>
+                <!-- Se puebla dinámicamente según el animal seleccionado -->
+                <select id="f-raza" name="raza" class="rp-input rp-select" disabled>
+                  <option value="">Selecciona un animal primero…</option>
+                </select>
+                <!-- Visible solo cuando animal = "otro" -->
+                <input type="text" id="f-raza-otro" name="raza_otro" class="rp-input" placeholder="Describe el animal…" style="display:none;" />
+              </div>
+              <div class="rp-field">
+                <label for="f-color">Color principal</label>
+                <input type="text" id="f-color" name="color" class="rp-input" placeholder="Ej: Dorado, Negro y blanco…" />
+              </div>
+              <div class="rp-field">
+                <label for="f-tamano">Tamaño</label>
+                <select id="f-tamano" name="tamano" class="rp-input rp-select">
+                  <option value="">Seleccionar…</option>
+                  <option value="Muy pequeño">Muy pequeño  (&lt;5 kg)</option>
+                  <option value="Pequeño">Pequeño  (5–10 kg)</option>
+                  <option value="Mediano">Mediano  (10–25 kg)</option>
+                  <option value="Grande">Grande  (&gt;25 kg)</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- Descripción -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">5</span>Descripción
+            </h2>
+            <textarea
+              name="descripcion" id="f-desc"
+              class="rp-input rp-textarea" rows="4"
+              placeholder="Señas particulares, collar, microchip, comportamiento, contexto de cómo se perdió o encontró…"
+            ></textarea>
+            <span class="rp-char-count" id="rp-char-count">0 / 600</span>
+          </section>
+
+          <!-- Fotos -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">6</span>Fotos
+              <span class="rp-optional">hasta 5 imágenes</span>
+            </h2>
+            <div class="rp-upload-zone" id="rp-upload-zone">
+              <input type="file" id="rp-file-input" accept="image/*" multiple class="rp-file-hidden" />
+              <div class="rp-upload-prompt" id="rp-upload-prompt">
+                <div class="rp-upload-icon">📷</div>
+                <p>Arrastra tus fotos aquí o
+                  <button type="button" class="rp-upload-link" id="rp-upload-btn">selecciona archivos</button>
+                </p>
+                <p class="rp-upload-hint">JPG · PNG · WEBP &nbsp;·&nbsp; máx. 5 MB por foto</p>
+              </div>
+            </div>
+            <div class="rp-previews" id="rp-previews"></div>
+          </section>
+
+        </div><!-- /rp-fields -->
+
+        <!-- ─── RIGHT: mapa ─── -->
+        <aside class="rp-map-col">
+          <div class="rp-map-sticky">
+            <section class="rp-section rp-map-section">
+              <h2 class="rp-section-title">
+                <span class="rp-step">7</span>Ubicación
+              </h2>
+              <p class="rp-map-hint">
+                Haz clic en el mapa para marcar dónde fue visto el animal.
+              </p>
+              <div class="rp-map-container" id="rp-map"></div>
+              <div class="rp-location-pill" id="rp-location-pill">
+                <span class="rp-loc-dot" id="rp-loc-dot"></span>
+                <span id="rp-location-text">Sin ubicación seleccionada</span>
+              </div>
+              <input type="hidden" name="lat" id="rp-lat" />
+              <input type="hidden" name="lng" id="rp-lng" />
+            </section>
+          </div>
+        </aside>
+
+      </div><!-- /rp-columns -->
+
+      <!-- Submit -->
+      <div class="rp-submit-row">
+        <p class="rp-submit-note">
+          Al publicar aceptas que este reporte sea visible públicamente en el mapa.
+        </p>
+        <button type="submit" class="rp-submit-btn" id="rp-submit">
+          Publicar reporte
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- ── CONFIRMACIÓN ── -->
+  <div class="rp-confirm" id="rp-confirm" aria-hidden="true">
+    <div class="rp-confirm-card">
+      <div class="rp-confirm-emoji">🐾</div>
+      <h2 class="rp-confirm-title">¡Reporte publicado!</h2>
+      <p class="rp-confirm-text">
+        Tu reporte ya está visible para toda la comunidad.<br />
+        Esperamos que pronto haya buenas noticias.
+      </p>
+      <a href="/mapa" class="rp-confirm-btn">Ver en el mapa →</a>
+      <button type="button" class="rp-confirm-new" id="rp-confirm-new">
+        Publicar otro reporte
+      </button>
+    </div>
+  </div>
+
+</BaseLayout>
+
+<style>
+  /* ── PAGE ── */
+  .rp-page {
+    min-height: 100svh;
+    background: #F5EFE0;
+    padding-top: 62px; /* navbar height */
+  }
+
+  /* ── HEADER ── */
+  .rp-header {
+    background: #FDF8F0;
+    border-bottom: 1px solid rgba(45,27,18,.08);
+    padding: 3rem 3rem 2.5rem;
+  }
+  .rp-header-inner { max-width: 800px; }
+  .rp-header-tag {
+    display: inline-block;
+    font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em;
+    color: #9E4026; background: rgba(196,92,58,.1);
+    border: 1px solid rgba(196,92,58,.25);
+    padding: .22rem .75rem; border-radius: 999px;
+    margin-bottom: .85rem;
+  }
+  .rp-title {
+    font-family: 'Fraunces', serif; font-weight: 900;
+    font-size: 2.4rem; letter-spacing: -.03em;
+    color: #2D1B12; line-height: 1.1;
+    margin-bottom: .6rem;
+  }
+  .rp-subtitle {
+    font-size: .95rem; color: rgba(45,27,18,.5); line-height: 1.65;
+  }
+
+  /* ── FORM ── */
+  .rp-form { padding: 2.5rem 3rem 4rem; }
+
+  .rp-columns {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 2.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ── SECTIONS ── */
+  .rp-section { margin-bottom: 2rem; }
+  .rp-section-title {
+    display: flex; align-items: center; gap: .6rem;
+    font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 700;
+    color: #2D1B12; margin-bottom: .9rem;
+  }
+  .rp-step {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(196,92,58,.15); border: 1.5px solid rgba(196,92,58,.4);
+    color: #9E4026; font-family: 'Nunito', sans-serif;
+    font-size: .72rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .rp-optional {
+    font-family: 'Nunito', sans-serif; font-size: .7rem; font-weight: 700;
+    color: rgba(45,27,18,.35); text-transform: uppercase; letter-spacing: .06em;
+    margin-left: .2rem;
+  }
+
+  /* ── RADIO PILLS ── */
+  .rp-radio-row { display: flex; gap: .55rem; flex-wrap: wrap; }
+  .rp-radio-pill { cursor: pointer; }
+  .rp-radio-pill input { display: none; }
+  .rp-radio-inner {
+    display: flex; align-items: center; gap: .45rem;
+    padding: .45rem 1rem; border-radius: 999px;
+    border: 1.5px solid rgba(45,27,18,.15);
+    background: rgba(45,27,18,.04);
+    font-size: .85rem; font-weight: 700;
+    color: rgba(45,27,18,.55);
+    transition: all .18s; user-select: none;
+  }
+  .rp-radio-pill input:checked + .rp-radio-inner {
+    border-color: #C45C3A; background: rgba(196,92,58,.12);
+    color: #2D1B12; box-shadow: 0 0 0 3px rgba(196,92,58,.12);
+  }
+  .rp-radio-pill[data-value="encontrado"] input:checked + .rp-radio-inner {
+    border-color: #6B8F71; background: rgba(107,143,113,.12);
+    color: #2D1B12; box-shadow: 0 0 0 3px rgba(107,143,113,.12);
+  }
+  .rp-radio-inner:hover { border-color: rgba(45,27,18,.3); color: #2D1B12; }
+
+  .rp-radio-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .rp-radio-dot.perdido    { background: #C45C3A; }
+  .rp-radio-dot.encontrado { background: #6B8F71; }
+
+  /* ── INPUTS ── */
+  .rp-input {
+    width: 100%; padding: .7rem 1rem;
+    background: white;
+    border: 1.5px solid rgba(45,27,18,.15);
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif; font-size: .9rem;
+    color: #2D1B12; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .rp-input::placeholder { color: rgba(45,27,18,.3); }
+  .rp-input:focus {
+    border-color: #C45C3A;
+    box-shadow: 0 0 0 3px rgba(196,92,58,.12);
+  }
+  .rp-select { cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(45,27,18,.4)' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 1rem center;
+    background-color: white;
+    padding-right: 2.5rem;
+  }
+  .rp-select option { background: white; color: #2D1B12; }
+
+  .rp-fields-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .8rem;
+  }
+  .rp-field { display: flex; flex-direction: column; gap: .4rem; }
+  .rp-field label {
+    font-size: .75rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .06em; color: rgba(45,27,18,.45);
+  }
+
+  .rp-textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+  .rp-char-count {
+    display: block; text-align: right;
+    font-size: .72rem; color: rgba(45,27,18,.35);
+    margin-top: .35rem;
+  }
+
+  /* ── UPLOAD ── */
+  .rp-file-hidden { display: none; }
+  .rp-upload-zone {
+    border: 2px dashed rgba(45,27,18,.15);
+    border-radius: 16px; padding: 2rem 1.5rem;
+    text-align: center; cursor: pointer;
+    background: rgba(45,27,18,.03);
+    transition: border-color .2s, background .2s;
+  }
+  .rp-upload-zone.drag-over {
+    border-color: #C45C3A; background: rgba(196,92,58,.07);
+  }
+  .rp-upload-icon { font-size: 2rem; margin-bottom: .5rem; }
+  .rp-upload-zone p {
+    font-size: .85rem; color: rgba(45,27,18,.5); line-height: 1.7;
+  }
+  .rp-upload-link {
+    background: none; border: none; cursor: pointer;
+    color: #C45C3A; font-weight: 700; font-size: .85rem;
+    font-family: 'Nunito', sans-serif;
+    text-decoration: underline; text-underline-offset: 2px;
+    transition: color .2s;
+  }
+  .rp-upload-link:hover { color: #9E4026; }
+  .rp-upload-hint { font-size: .75rem !important; margin-top: .25rem; }
+
+  .rp-previews {
+    display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .9rem;
+  }
+  .rp-preview-item {
+    position: relative; width: 80px; height: 80px; border-radius: 10px; overflow: hidden;
+    border: 2px solid rgba(45,27,18,.1);
+  }
+  .rp-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+  .rp-preview-remove {
+    position: absolute; top: 3px; right: 3px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(0,0,0,.6); border: none; cursor: pointer;
+    color: white; font-size: .6rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .rp-preview-remove:hover { background: #C45C3A; }
+
+  /* ── MAP COLUMN ── */
+  .rp-map-col { position: relative; }
+  .rp-map-sticky { position: sticky; top: 80px; }
+  .rp-map-section { margin-bottom: 0; }
+  .rp-map-hint {
+    font-size: .8rem; color: rgba(45,27,18,.45); margin-bottom: .85rem; line-height: 1.55;
+  }
+  .rp-map-container {
+    width: 100%; height: 380px; border-radius: 16px; overflow: hidden;
+    border: 1.5px solid rgba(45,27,18,.1);
+    background: #e8e0d0;
+  }
+  .rp-location-pill {
+    display: flex; align-items: center; gap: .5rem;
+    margin-top: .75rem; padding: .55rem .9rem;
+    background: rgba(45,27,18,.05); border: 1px solid rgba(45,27,18,.1);
+    border-radius: 999px; font-size: .8rem;
+    color: rgba(45,27,18,.45); font-weight: 600;
+    transition: color .2s, border-color .2s;
+  }
+  .rp-location-pill.has-location {
+    border-color: rgba(196,92,58,.35); color: #9E4026;
+  }
+  .rp-loc-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: rgba(45,27,18,.2); flex-shrink: 0;
+    transition: background .2s;
+  }
+  .rp-location-pill.has-location .rp-loc-dot { background: #C45C3A; }
+
+  /* ── SUBMIT ── */
+  .rp-submit-row {
+    max-width: 1100px; margin: 2.5rem auto 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+    padding-top: 2rem; border-top: 1px solid rgba(45,27,18,.09);
+  }
+  .rp-submit-note {
+    font-size: .78rem; color: rgba(45,27,18,.4); line-height: 1.5; max-width: 380px;
+  }
+  .rp-submit-btn {
+    flex-shrink: 0;
+    background: #C45C3A; color: white; border: none;
+    padding: .95rem 2.5rem; border-radius: 14px;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem;
+    cursor: pointer; letter-spacing: .01em;
+    box-shadow: 0 4px 24px rgba(196,92,58,.35);
+    transition: background .2s, transform .18s;
+  }
+  .rp-submit-btn:hover { background: #9E4026; transform: translateY(-2px); }
+  .rp-submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+  /* ── CONFIRMATION ── */
+  .rp-confirm {
+    position: fixed; inset: 0; z-index: 900;
+    background: rgba(10,4,1,.85); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity .35s ease;
+  }
+  .rp-confirm.show { opacity: 1; pointer-events: auto; }
+  .rp-confirm-card {
+    background: #1C0E07; border: 1px solid rgba(255,255,255,.1);
+    border-radius: 24px; padding: 3rem 2.5rem;
+    text-align: center; max-width: 420px; width: 90%;
+    box-shadow: 0 24px 80px rgba(0,0,0,.6);
+    transform: translateY(20px);
+    transition: transform .35s cubic-bezier(.34,1.2,.64,1);
+  }
+  .rp-confirm.show .rp-confirm-card { transform: translateY(0); }
+  .rp-confirm-emoji { font-size: 3rem; margin-bottom: 1.2rem; }
+  .rp-confirm-title {
+    font-family: 'Fraunces', serif; font-weight: 900;
+    font-size: 1.9rem; color: #F5EAE0; margin-bottom: .7rem;
+  }
+  .rp-confirm-text {
+    font-size: .9rem; color: rgba(245,220,200,.55); line-height: 1.65; margin-bottom: 2rem;
+  }
+  .rp-confirm-btn {
+    display: block; width: 100%;
+    background: #C45C3A; color: white; text-decoration: none;
+    padding: .9rem; border-radius: 12px;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem;
+    box-shadow: 0 4px 20px rgba(196,92,58,.4);
+    transition: background .2s, transform .18s;
+    margin-bottom: .75rem;
+  }
+  .rp-confirm-btn:hover { background: #9E4026; transform: translateY(-2px); }
+  .rp-confirm-new {
+    background: none; border: none; cursor: pointer; width: 100%;
+    font-family: 'Nunito', sans-serif; font-size: .85rem; font-weight: 700;
+    color: rgba(245,220,200,.4); padding: .5rem;
+    transition: color .2s;
+  }
+  .rp-confirm-new:hover { color: #F0B89A; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .rp-columns { grid-template-columns: 1fr; }
+    .rp-map-sticky { position: static; }
+    .rp-fields-grid { grid-template-columns: 1fr 1fr; }
+    .rp-header { padding: 2rem 1.5rem; }
+    .rp-form   { padding: 1.5rem 1.5rem 3rem; }
+    .rp-submit-row { flex-direction: column; align-items: stretch; }
+    .rp-submit-note { max-width: 100%; }
+  }
+  @media (max-width: 540px) {
+    .rp-fields-grid { grid-template-columns: 1fr; }
+    .rp-title { font-size: 1.8rem; }
+  }
+</style>
+
+<script>
+  import { getSession } from '../lib/auth';
+  import { apiFetch } from '../lib/api';
+
+  // ── Redirigir si no hay sesión ──
+  if (!getSession()) window.location.replace('/acceder');
+
+  // ── Razas por animal ──
+  const RAZAS: Record<string, string[]> = {
+    perro: [
+      'Mestizo / Mixto',
+      'Labrador Retriever', 'Golden Retriever', 'Pastor Alemán',
+      'Husky Siberiano', 'Border Collie', 'Beagle', 'Bulldog Francés',
+      'Poodle / Caniche', 'Chihuahua', 'Dachshund / Salchicha',
+      'Boxer', 'Rottweiler', 'Doberman', 'Pitbull / American Staffordshire',
+      'Schnauzer', 'Shih Tzu', 'Yorkshire Terrier', 'Maltés',
+      'Cocker Spaniel', 'Springer Spaniel', 'Samoyedo', 'Akita',
+      'Shar Pei', 'Pug / Carlino', 'Bichón Frisé', 'Weimaraner',
+      'Dálmata', 'Gran Danés', 'San Bernardo', 'Chow Chow',
+    ],
+    gato: [
+      'Mestizo / Mixto',
+      'Común Europeo', 'Persa', 'Siamés', 'Maine Coon',
+      'Ragdoll', 'Bengalí', 'Angora Turco', 'British Shorthair',
+      'Scottish Fold', 'Sphynx', 'Abisinio', 'Birmano',
+      'Noruego del Bosque', 'Ruso Azul', 'Himálayo',
+      'Bombay', 'Tonkinés', 'Somalí', 'Manx',
+    ],
+  };
+
+  const razaSelect = document.getElementById('f-raza')      as HTMLSelectElement;
+  const razaOtro   = document.getElementById('f-raza-otro') as HTMLInputElement;
+
+  function updateRazas(animal: string) {
+    if (animal === 'otro') {
+      razaSelect.style.display = 'none';
+      razaOtro.style.display   = '';
+      razaSelect.disabled = true;
+      razaOtro.required   = false;
+      return;
+    }
+    razaSelect.style.display = '';
+    razaOtro.style.display   = 'none';
+    razaSelect.disabled = false;
+
+    const list = RAZAS[animal] ?? [];
+    razaSelect.innerHTML =
+      `<option value="">Seleccionar raza…</option>` +
+      list.map(r => `<option value="${r}">${r}</option>`).join('');
+  }
+
+  // ── Radio pills ──
+  document.querySelectorAll<HTMLElement>('.rp-radio-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const input = pill.querySelector<HTMLInputElement>('input');
+      if (!input) return;
+      input.checked = true;
+      // Si es el grupo "animal", actualizar razas
+      if (input.name === 'animal') updateRazas(input.value);
+    });
+  });
+
+  // ── Contador de caracteres ──
+  const desc  = document.getElementById('f-desc')      as HTMLTextAreaElement;
+  const count = document.getElementById('rp-char-count');
+  const MAX   = 600;
+  desc?.addEventListener('input', () => {
+    if (count) count.textContent = `${desc.value.length} / ${MAX}`;
+    if (desc.value.length > MAX) desc.value = desc.value.slice(0, MAX);
+  });
+
+  // ── Upload de fotos ──
+  const fileInput  = document.getElementById('rp-file-input')  as HTMLInputElement;
+  const uploadZone = document.getElementById('rp-upload-zone') as HTMLDivElement;
+  const uploadBtn  = document.getElementById('rp-upload-btn')  as HTMLButtonElement;
+  const previews   = document.getElementById('rp-previews')    as HTMLDivElement;
+
+  let selectedFiles: File[] = [];
+
+  uploadBtn?.addEventListener('click', () => fileInput?.click());
+  uploadZone?.addEventListener('click', (e) => {
+    if (e.target === uploadZone || (e.target as HTMLElement).closest('.rp-upload-prompt'))
+      fileInput?.click();
+  });
+
+  // Drag & drop
+  uploadZone?.addEventListener('dragover',  (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone?.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone?.addEventListener('drop',      (e) => {
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/'));
+    addFiles(files);
+  });
+
+  fileInput?.addEventListener('change', () => {
+    addFiles(Array.from(fileInput.files ?? []));
+    fileInput.value = '';
+  });
+
+  function addFiles(files: File[]) {
+    const remaining = 5 - selectedFiles.length;
+    files.slice(0, remaining).forEach(file => {
+      selectedFiles.push(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const item = document.createElement('div');
+        item.className = 'rp-preview-item';
+        item.dataset.name = file.name;
+        item.innerHTML = `
+          <img src="${e.target?.result}" alt="${file.name}" />
+          <button type="button" class="rp-preview-remove" aria-label="Quitar foto">✕</button>`;
+        item.querySelector('.rp-preview-remove')?.addEventListener('click', () => {
+          selectedFiles = selectedFiles.filter(f => f.name !== file.name);
+          item.remove();
+        });
+        previews.appendChild(item);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ── Mapa Leaflet ──
+  (async () => {
+    const L = (await import('leaflet')).default;
+    await import('leaflet/dist/leaflet.css');
+
+    const RM_BOUNDS = L.latLngBounds([-34.6, -71.8], [-32.9, -70.0]);
+    const map = L.map('rp-map', {
+      zoomControl: true,
+      maxBounds: RM_BOUNDS,
+      maxBoundsViscosity: 1.0,
+      minZoom: 10, maxZoom: 18,
+    }).setView([-33.4489, -70.6693], 12);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      subdomains: 'abcd', maxZoom: 18, bounds: RM_BOUNDS,
+    }).addTo(map);
+
+    let marker: ReturnType<typeof L.marker> | null = null;
+    const latInput  = document.getElementById('rp-lat')  as HTMLInputElement;
+    const lngInput  = document.getElementById('rp-lng')  as HTMLInputElement;
+    const locPill   = document.getElementById('rp-location-pill')  as HTMLElement;
+    const locText   = document.getElementById('rp-location-text')  as HTMLElement;
+
+    const pinIcon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:32px;height:32px;border-radius:50%;
+        background:#C45C3A;border:3px solid white;
+        box-shadow:0 3px 12px rgba(0,0,0,.45);
+        display:flex;align-items:center;justify-content:center;
+        font-size:14px;
+      ">📍</div>`,
+      iconSize: [32, 32], iconAnchor: [16, 32],
+    });
+
+    map.on('click', (e) => {
+      const { lat, lng } = e.latlng;
+      if (marker) marker.setLatLng([lat, lng]);
+      else marker = L.marker([lat, lng], { icon: pinIcon }).addTo(map);
+
+      latInput.value = lat.toFixed(6);
+      lngInput.value = lng.toFixed(6);
+
+      locText.textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      locPill.classList.add('has-location');
+    });
+
+    // Invalida tamaño al cargar (por el sticky)
+    setTimeout(() => map.invalidateSize(), 100);
+  })();
+
+  // ── Submit ──
+  const form      = document.getElementById('rp-form')        as HTMLFormElement;
+  const confirm   = document.getElementById('rp-confirm')     as HTMLElement;
+  const newBtn    = document.getElementById('rp-confirm-new') as HTMLButtonElement;
+  const submitBtn = document.getElementById('rp-submit')      as HTMLButtonElement;
+
+  function showSubmitError(msg: string) {
+    let errEl = document.getElementById('rp-submit-error');
+    if (!errEl) {
+      errEl = document.createElement('p');
+      errEl.id = 'rp-submit-error';
+      errEl.style.cssText = 'color:#9E4026;font-size:.82rem;font-weight:700;margin-top:.6rem;text-align:right;';
+      submitBtn.parentElement?.appendChild(errEl);
+    }
+    errEl.textContent = `⚠️ ${msg}`;
+  }
+
+  function clearSubmitError() {
+    document.getElementById('rp-submit-error')?.remove();
+  }
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearSubmitError();
+
+    // ── Validaciones ──
+    const tipoInput   = form.querySelector<HTMLInputElement>('input[name="tipo"]:checked');
+    const animalInput = form.querySelector<HTMLInputElement>('input[name="animal"]:checked');
+    const latInput    = document.getElementById('rp-lat') as HTMLInputElement;
+    const lngInput    = document.getElementById('rp-lng') as HTMLInputElement;
+
+    if (!tipoInput)         { showSubmitError('Selecciona el tipo de reporte.'); return; }
+    if (!animalInput)       { showSubmitError('Selecciona el tipo de animal.'); return; }
+    if (!latInput.value)    { showSubmitError('Marca la ubicación del animal en el mapa.'); return; }
+
+    // ── Construir FormData ──
+    const fd = new FormData();
+    fd.append('tipo',   tipoInput.value);
+    fd.append('animal', animalInput.value);
+    fd.append('lat',    latInput.value);
+    fd.append('lng',    lngInput.value);
+
+    const nombreVal = (form.querySelector<HTMLInputElement>('input[name="nombre"]'))?.value.trim();
+    if (nombreVal) fd.append('nombre', nombreVal);
+
+    // Raza: select normal o input de texto (cuando animal = "otro")
+    const razaSelect = document.getElementById('f-raza') as HTMLSelectElement;
+    const razaOtroInput = document.getElementById('f-raza-otro') as HTMLInputElement;
+    const razaVal = razaSelect.style.display === 'none'
+      ? razaOtroInput.value.trim()
+      : razaSelect.value;
+    if (razaVal) fd.append('raza', razaVal);
+
+    const colorVal = (document.getElementById('f-color') as HTMLInputElement).value.trim();
+    if (colorVal) fd.append('color', colorVal);
+
+    const tamanoVal = (document.getElementById('f-tamano') as HTMLSelectElement).value;
+    if (tamanoVal) fd.append('tamano', tamanoVal);
+
+    const descVal = (document.getElementById('f-desc') as HTMLTextAreaElement).value.trim();
+    if (descVal) fd.append('descripcion', descVal);
+
+    // Fotos
+    selectedFiles.forEach(file => fd.append('fotos', file));
+
+    // ── Enviar al backend ──
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Publicando…';
+
+    try {
+      await apiFetch('/api/reportes', { method: 'POST', body: fd });
+
+      // Éxito: mostrar confirmación
+      confirm.classList.add('show');
+      confirm.setAttribute('aria-hidden', 'false');
+    } catch (err: unknown) {
+      const msg = err && typeof err === 'object' && 'message' in err
+        ? String((err as { message: string }).message)
+        : 'Error al publicar. Intenta nuevamente.';
+
+      // Si no hay sesión, redirigir a acceder
+      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 401) {
+        window.location.href = '/acceder';
+        return;
+      }
+
+      showSubmitError(msg);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Publicar reporte';
+    }
+  });
+
+  newBtn?.addEventListener('click', () => {
+    confirm.classList.remove('show');
+    confirm.setAttribute('aria-hidden', 'true');
+    form?.reset();
+    document.getElementById('rp-previews')!.innerHTML = '';
+    selectedFiles = [];
+    if (count) count.textContent = '0 / 600';
+    clearSubmitError();
+  });
+</script>

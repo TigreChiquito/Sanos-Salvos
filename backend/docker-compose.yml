@@ -1,0 +1,383 @@
+version: '3.9'
+
+# =============================================================
+#  Sanos & Salvos — Infraestructura base
+#  Servicios: PostgreSQL · MongoDB · Zookeeper · Kafka ·
+#             Debezium (CDC) · MinIO (fotos)
+#  Dev tools (profile "dev"): Kafka UI · mongo-express
+# =============================================================
+
+networks:
+  ss-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  mongodb-data:
+  zookeeper-data:
+  zookeeper-log:
+  kafka-data:
+  minio-data:
+
+services:
+
+  # ============================================================
+  # BASES DE DATOS
+  # ============================================================
+
+  # PostgreSQL — DB de escritura (fuente de verdad)
+  # Usa la imagen pgvector/pgvector para soporte de embeddings
+  # vectoriales que necesita el Motor de Coincidencias (Micro 3)
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ss-postgres
+    restart: unless-stopped
+    command: >
+      postgres
+        -c wal_level=logical
+        -c max_replication_slots=10
+        -c max_wal_senders=10
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - ss-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # MongoDB — DB de lectura (optimizada para queries del mapa)
+  # No requiere contenedor adicional de balanceo (escala nativamente)
+  mongodb:
+    image: mongo:7
+    container_name: ss-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - ss-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ============================================================
+  # MENSAJERÍA
+  # ============================================================
+
+  # Zookeeper — coordinación del cluster Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: ss-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
+    ports:
+      - "2181:2181"
+    networks:
+      - ss-network
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # Kafka — bus de eventos entre microservicios
+  # Puerto interno 9092 (entre contenedores)
+  # Puerto externo 29092 (desde el host, para desarrollo)
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: ss-kafka
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    ports:
+      - "29092:29092"
+    networks:
+      - ss-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ============================================================
+  # CDC (Change Data Capture)
+  # ============================================================
+
+  # Debezium — captura cambios de PostgreSQL y los publica en Kafka
+  # Tópicos generados: ss.public.usuarios, ss.public.reportes, etc.
+  debezium:
+    image: debezium/connect:2.6
+    container_name: ss-debezium
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: ss-debezium-group
+      CONFIG_STORAGE_TOPIC: ss.debezium.configs
+      OFFSET_STORAGE_TOPIC: ss.debezium.offsets
+      STATUS_STORAGE_TOPIC: ss.debezium.status
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+    ports:
+      - "8083:8083"
+    networks:
+      - ss-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+
+  # ============================================================
+  # ALMACENAMIENTO DE OBJETOS
+  # ============================================================
+
+  # MinIO — almacenamiento S3-compatible para fotos de mascotas
+  # Consola web en: http://localhost:9001
+  # API S3 en:      http://localhost:9000
+  minio:
+    image: minio/minio:latest
+    container_name: ss-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - ss-network
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ============================================================
+  # MICROSERVICIOS
+  # ============================================================
+
+  # Micro 1 — Gestión de Usuarios (Spring Boot + OAuth2 Google + JWT)
+  micro-usuarios:
+    build:
+      context: ./micro-usuarios
+      dockerfile: Dockerfile
+    container_name: ss-micro-usuarios
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4321}
+    ports:
+      - "8081:8081"
+    networks:
+      - ss-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Micro 2 — Gestión de Mascotas (Spring Boot + CQRS + MinIO)
+  micro-mascotas:
+    build:
+      context: ./micro-mascotas
+      dockerfile: Dockerfile
+    container_name: ss-micro-mascotas
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      MONGO_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET_FOTOS: ${MINIO_BUCKET_FOTOS:-fotos-mascotas}
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4321}
+    ports:
+      - "8082:8082"
+    networks:
+      - ss-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Micro 3 — Motor de Coincidencias (FastAPI + ML)
+  micro-coincidencias:
+    build:
+      context: ./micro-coincidencias
+      dockerfile: Dockerfile
+    container_name: ss-micro-coincidencias
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MATCH_THRESHOLD: ${MATCH_THRESHOLD:-0.60}
+      MAX_DISTANCIA_KM: ${MAX_DISTANCIA_KM:-10.0}
+    ports:
+      - "8083:8083"
+    networks:
+      - ss-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/health || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 90s  # más tiempo por la carga de modelos ML
+
+  # Orquestador — API Gateway (Spring Cloud Gateway + Circuit Breaker)
+  orquestador:
+    build:
+      context: ./orquestador
+      dockerfile: Dockerfile
+    container_name: ss-orquestador
+    restart: unless-stopped
+    depends_on:
+      micro-usuarios:
+        condition: service_healthy
+      micro-mascotas:
+        condition: service_healthy
+      micro-coincidencias:
+        condition: service_healthy
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4321}
+    ports:
+      - "8080:8080"
+    networks:
+      - ss-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+
+  # ============================================================
+  # HERRAMIENTAS DE DESARROLLO
+  # Activar con: docker compose --profile dev up
+  # ============================================================
+
+  # Kafka UI — interfaz visual para inspeccionar tópicos y mensajes
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: ss-kafka-ui
+    restart: unless-stopped
+    profiles: ["dev"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: sanos-salvos
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    ports:
+      - "8080:8080"
+    networks:
+      - ss-network
+
+  # mongo-express — interfaz visual para MongoDB
+  mongo-express:
+    image: mongo-express:latest
+    container_name: ss-mongo-express
+    restart: unless-stopped
+    profiles: ["dev"]
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/
+      ME_CONFIG_BASICAUTH: "false"
+    ports:
+      - "8081:8081"
+    networks:
+      - ss-network

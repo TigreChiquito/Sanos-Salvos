@@ -1,0 +1,86 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: micro-usuarios
+
+  # ── PostgreSQL ──────────────────────────────────────────────
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/sanos_salvos}
+    username: ${POSTGRES_USER:ss_admin}
+    password: ${POSTGRES_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      # "validate": JPA no crea ni altera tablas; el schema ya existe
+      # por el script 01-schema.sql que corre al arrancar postgres
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # ── OAuth2 Google ───────────────────────────────────────────
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
+  # ── Kafka ───────────────────────────────────────────────────
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        spring.json.add.type.headers: false
+
+# ── Configuración propia de la app ──────────────────────────
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-change-in-production-min-32-chars}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+  oauth2:
+    # URL del frontend donde redirigir tras login exitoso
+    # El token JWT se pasa como query param: /acceder?token=...
+    redirect-uri: ${FRONTEND_URL:http://localhost:4321}/acceder
+
+  cors:
+    allowed-origins: ${FRONTEND_URL:http://localhost:4321}
+
+# ── Swagger UI ───────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# ── Logging ─────────────────────────────────────────────────
+logging:
+  level:
+    cl.sanosysalvos: DEBUG
+    org.springframework.security: INFO
+    org.springframework.kafka: WARN

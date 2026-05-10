@@ -1,0 +1,213 @@
+---
+// src/components/NavbarApp.astro
+interface Props {
+  active?: 'mapa' | 'nosotros' | 'reportar';
+}
+const { active } = Astro.props;
+---
+
+<nav class="navbar-app">
+  <a href="/" class="logo">
+    <div class="logo-mark">🐾</div>
+    <span class="logo-text">Sanos &amp; Salvos</span>
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="/#como-funciona">Cómo funciona</a></li>
+    <li><a href="/mapa"      class={active === 'mapa'      ? 'active' : ''}>Mapa</a></li>
+    <li><a href="/nosotros" class={active === 'nosotros' ? 'active' : ''}>Nosotros</a></li>
+    <!-- guest -->
+    <li data-auth="guest"><a href="/acceder">Acceder</a></li>
+    <!-- logged-in -->
+    <li data-auth="user"><a href="/reportar" class={`nav-cta${active === 'reportar' ? ' active' : ''}`}>Reportar ahora</a></li>
+    <li data-auth="user" class="nav-avatar-wrap">
+      <button class="nav-avatar" id="app-avatar-btn" aria-label="Menú de usuario" aria-expanded="false">
+        <span id="app-initials">??</span>
+      </button>
+      <div class="nav-user-dropdown" id="app-user-dropdown">
+        <span class="dropdown-name" id="app-user-name"></span>
+        <hr class="dropdown-divider" />
+        <button class="dropdown-logout" id="app-logout-btn">Cerrar sesión</button>
+      </div>
+    </li>
+  </ul>
+
+  <button class="nav-burger" id="app-burger" aria-label="Menú" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="nav-mobile-app" id="app-mobile">
+  <a href="/#como-funciona">Cómo funciona</a>
+  <a href="/mapa"      class={active === 'mapa'      ? 'active' : ''}>Mapa</a>
+  <a href="/nosotros" class={active === 'nosotros' ? 'active' : ''}>Nosotros</a>
+  <a href="/acceder"  data-auth="guest">Acceder</a>
+  <a href="/reportar" data-auth="user" class="mobile-cta">Reportar ahora</a>
+  <button data-auth="user" class="mobile-cta mobile-logout" id="app-mobile-logout">Cerrar sesión</button>
+</div>
+
+<style>
+  .navbar-app {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    height: 62px;
+    background: #1C0E07;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,.35);
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: .5rem;
+    text-decoration: none; color: #F5EAE0;
+  }
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: #C45C3A; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .95rem;
+  }
+  .logo-text { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.1rem; }
+
+  .nav-links { display: flex; align-items: center; gap: 1.5rem; list-style: none; }
+  .nav-links a {
+    color: rgba(245,220,200,.6); text-decoration: none;
+    font-weight: 600; font-size: .88rem; transition: color .2s;
+  }
+  .nav-links a:hover { color: #F5EAE0; }
+  .nav-links a.active { color: #F0B89A; font-weight: 800; }
+
+  .nav-cta {
+    background: #C45C3A !important; color: white !important;
+    padding: .45rem 1.15rem; border-radius: 999px;
+    font-weight: 700 !important; transition: background .2s !important;
+  }
+  .nav-cta:hover { background: #9E4026 !important; }
+
+  /* Avatar + dropdown */
+  .nav-avatar-wrap { position: relative; }
+  .nav-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: #C45C3A;
+    border: 2px solid rgba(255,255,255,.25);
+    color: white; font-weight: 800; font-size: .78rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: border-color .2s, transform .15s;
+  }
+  .nav-avatar:hover { border-color: rgba(255,255,255,.7); transform: scale(1.06); }
+
+  .nav-user-dropdown {
+    display: none; flex-direction: column;
+    position: absolute; top: calc(100% + .65rem); right: 0;
+    background: #1C0E07; border: 1px solid rgba(255,255,255,.1);
+    border-radius: 14px; padding: .6rem;
+    min-width: 180px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.55);
+  }
+  .nav-user-dropdown.open { display: flex; }
+  .dropdown-name {
+    font-size: .82rem; font-weight: 700;
+    color: rgba(245,220,200,.6);
+    padding: .35rem .6rem .2rem;
+  }
+  .dropdown-divider {
+    border: none; border-top: 1px solid rgba(255,255,255,.08);
+    margin: .4rem 0;
+  }
+  .dropdown-logout {
+    width: 100%; text-align: left;
+    background: none; border: none; cursor: pointer;
+    font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .85rem;
+    color: #F0B89A; padding: .45rem .6rem; border-radius: 8px;
+    transition: background .15s, color .15s;
+  }
+  .dropdown-logout:hover { background: rgba(196,92,58,.2); color: white; }
+
+  /* Burger */
+  .nav-burger {
+    display: none; flex-direction: column; gap: 5px;
+    background: none; border: none; cursor: pointer; padding: 4px;
+  }
+  .nav-burger span {
+    display: block; width: 24px; height: 2px;
+    background: rgba(245,220,200,.7); border-radius: 2px; transition: all .3s;
+  }
+
+  /* Mobile menu */
+  .nav-mobile-app {
+    display: none; flex-direction: column;
+    position: fixed; top: 62px; left: 0; right: 0;
+    background: #160A05; z-index: 199;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    padding: .5rem 0;
+  }
+  .nav-mobile-app a,
+  .nav-mobile-app button {
+    color: rgba(245,220,200,.7); text-decoration: none;
+    font-weight: 600; font-size: 1rem;
+    padding: .9rem 2rem; border-bottom: 1px solid rgba(255,255,255,.05);
+    transition: color .2s, background .2s;
+    background: none; border: none; cursor: pointer;
+    text-align: left; width: 100%;
+    font-family: 'Nunito', sans-serif;
+  }
+  .nav-mobile-app a:hover,
+  .nav-mobile-app button:hover { color: #F5EAE0; background: rgba(255,255,255,.04); }
+  .nav-mobile-app a.active { color: #F0B89A; }
+  .mobile-cta { color: #F0B89A !important; font-weight: 800 !important; }
+  .nav-mobile-app.open { display: flex; }
+
+  @media (max-width: 768px) {
+    .navbar-app { padding: 0 1.4rem; }
+    .nav-links { display: none; }
+    .nav-burger { display: flex; }
+  }
+</style>
+
+<script>
+  import { getSession, logout, onAuthChange } from '../lib/auth';
+
+  // ── Burger ──
+  const burger = document.getElementById('app-burger');
+  const mobile = document.getElementById('app-mobile');
+  burger?.addEventListener('click', () => {
+    const isOpen = mobile?.classList.toggle('open');
+    burger.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  // ── Auth state ──
+  function applyAuth(user: { name: string; initials: string } | null) {
+    const guestEls = document.querySelectorAll<HTMLElement>('[data-auth="guest"]');
+    const userEls  = document.querySelectorAll<HTMLElement>('[data-auth="user"]');
+    guestEls.forEach(el => { el.style.display = user ? 'none' : ''; });
+    userEls.forEach(el  => { el.style.display = user ? ''     : 'none'; });
+
+    if (user) {
+      const initEl = document.getElementById('app-initials');
+      const nameEl = document.getElementById('app-user-name');
+      if (initEl) initEl.textContent = user.initials;
+      if (nameEl) nameEl.textContent = user.name;
+    }
+  }
+
+  applyAuth(getSession());
+  onAuthChange(applyAuth);
+
+  // ── Avatar dropdown ──
+  const avatarBtn = document.getElementById('app-avatar-btn');
+  const dropdown  = document.getElementById('app-user-dropdown');
+  avatarBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown?.classList.toggle('open');
+    avatarBtn.setAttribute('aria-expanded', String(isOpen));
+  });
+  document.addEventListener('click', () => dropdown?.classList.remove('open'));
+
+  // ── Logout ──
+  function doLogout() {
+    logout();
+    window.location.href = '/';
+  }
+  document.getElementById('app-logout-btn')?.addEventListener('click', doLogout);
+  document.getElementById('app-mobile-logout')?.addEventListener('click', doLogout);
+</script>

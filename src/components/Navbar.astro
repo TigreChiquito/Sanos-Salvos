@@ -1,0 +1,374 @@
+---
+// src/components/Navbar.astro
+---
+
+<nav class="nav">
+  <a href="/" class="logo">
+    <span class="logo-text">Sanos &amp; Salvos</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/">Cómo funciona</a></li>
+    <li><a href="/mapa">Mapa</a></li>
+    <li><a href="/nosotros">Nosotros</a></li>
+    <!-- guest -->
+    <li data-auth="guest">
+      <a href="/acceder" class="nav-acceder">Acceder</a>
+    </li>
+    <!-- logged-in -->
+    <li data-auth="user">
+      <a href="/reportar" class="nav-cta">Reportar ahora</a>
+    </li>
+    <li data-auth="user" class="nav-avatar-wrap">
+      <button
+        class="nav-avatar"
+        id="nav-avatar-btn"
+        aria-label="Menú de usuario"
+        aria-expanded="false"
+      >
+        <span id="nav-initials">??</span>
+      </button>
+      <div class="nav-user-dropdown" id="nav-user-dropdown">
+        <span class="dropdown-name" id="nav-user-name"></span>
+        <hr class="dropdown-divider" />
+        <button class="dropdown-logout" id="nav-logout-btn"
+          >Cerrar sesión</button
+        >
+      </div>
+    </li>
+  </ul>
+  <!-- Mobile hamburger -->
+  <button
+    class="nav-burger"
+    aria-label="Menú"
+    aria-expanded="false"
+    id="nav-burger"
+  >
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile menu -->
+<div class="nav-mobile" id="nav-mobile">
+  <a href="#como-funciona">Cómo funciona</a>
+  <a href="/mapa">Mapa</a>
+  <a href="/nosotros">Nosotros</a>
+  <a href="/acceder" data-auth="guest">Acceder</a>
+  <a href="/reportar" data-auth="user" class="nav-cta-mobile">Reportar ahora</a>
+  <button
+    data-auth="user"
+    class="nav-cta-mobile mobile-logout"
+    id="nav-mobile-logout">Cerrar sesión</button
+  >
+</div>
+
+<style>
+  .nav {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.6rem 3rem;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    text-decoration: none;
+    color: white;
+  }
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    background: var(--terra);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 12px rgba(196, 92, 58, 0.5);
+  }
+  .logo-text {
+    font-family: "Fraunces", serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    list-style: none;
+  }
+  .nav-links a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover {
+    color: white;
+  }
+
+  .nav-acceder {
+    color: rgba(255, 255, 255, 0.85) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    padding: 0.45rem 1.1rem;
+    border-radius: 999px;
+    font-weight: 700 !important;
+    transition:
+      background 0.2s,
+      border-color 0.2s,
+      color 0.2s !important;
+  }
+  .nav-acceder:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    color: white !important;
+  }
+
+  .nav-cta {
+    background: var(--terra) !important;
+    color: white !important;
+    padding: 0.5rem 1.25rem;
+    border-radius: 999px;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 16px rgba(196, 92, 58, 0.45);
+    transition:
+      background 0.2s,
+      transform 0.15s !important;
+  }
+  .nav-cta:hover {
+    background: var(--terra-d) !important;
+    transform: translateY(-1px);
+  }
+
+  /* Avatar + dropdown */
+  .nav-avatar-wrap {
+    position: relative;
+  }
+  .nav-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--terra);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-weight: 800;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      border-color 0.2s,
+      transform 0.15s;
+  }
+  .nav-avatar:hover {
+    border-color: white;
+    transform: scale(1.06);
+  }
+
+  .nav-user-dropdown {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 0.65rem);
+    right: 0;
+    background: #1c0e07;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 0.6rem;
+    min-width: 180px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    animation: fadeUp 0.18s ease both;
+  }
+  .nav-user-dropdown.open {
+    display: flex;
+  }
+  .dropdown-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: rgba(245, 220, 200, 0.7);
+    padding: 0.35rem 0.6rem 0.2rem;
+  }
+  .dropdown-divider {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 0.4rem 0;
+  }
+  .dropdown-logout {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: "Nunito", sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #f0b89a;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    transition:
+      background 0.15s,
+      color 0.15s;
+  }
+  .dropdown-logout:hover {
+    background: rgba(196, 92, 58, 0.2);
+    color: white;
+  }
+
+  .mobile-logout {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: "Nunito", sans-serif;
+    text-align: left;
+    width: 100%;
+  }
+
+  /* Burger */
+  .nav-burger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .nav-burger span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  /* Mobile menu */
+  .nav-mobile {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    position: absolute;
+    top: 72px;
+    left: 0;
+    right: 0;
+    background: rgba(20, 8, 3, 0.97);
+    backdrop-filter: blur(12px);
+    z-index: 50;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .nav-mobile a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    transition:
+      color 0.2s,
+      background 0.2s;
+  }
+  .nav-mobile a:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .nav-cta-mobile {
+    color: var(--terra) !important;
+    font-weight: 800 !important;
+  }
+  .nav-mobile.open {
+    display: flex;
+  }
+
+  @media (max-width: 768px) {
+    .nav {
+      padding: 1.2rem 1.4rem;
+    }
+    .nav-links {
+      display: none;
+    }
+    .nav-burger {
+      display: flex;
+    }
+  }
+
+  @keyframes fadeDown {
+    from {
+      opacity: 0;
+      transform: translateY(-18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<script>
+  import { getSession, logout, onAuthChange } from "../lib/auth";
+
+  // ── Burger ──
+  const burger = document.getElementById("nav-burger");
+  const mobile = document.getElementById("nav-mobile");
+  burger?.addEventListener("click", () => {
+    const isOpen = mobile?.classList.toggle("open");
+    burger.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  // ── Auth state ──
+  function applyAuth(user: { name: string; initials: string } | null) {
+    const guestEls = document.querySelectorAll<HTMLElement>(
+      '[data-auth="guest"]',
+    );
+    const userEls =
+      document.querySelectorAll<HTMLElement>('[data-auth="user"]');
+    guestEls.forEach((el) => {
+      el.style.display = user ? "none" : "";
+    });
+    userEls.forEach((el) => {
+      el.style.display = user ? "" : "none";
+    });
+
+    if (user) {
+      const initEl = document.getElementById("nav-initials");
+      const nameEl = document.getElementById("nav-user-name");
+      if (initEl) initEl.textContent = user.initials;
+      if (nameEl) nameEl.textContent = user.name;
+    }
+  }
+
+  // Aplica estado inicial (evita flash)
+  applyAuth(getSession());
+  // Reacciona a cambios en tiempo real
+  onAuthChange(applyAuth);
+
+  // ── Avatar dropdown toggle ──
+  const avatarBtn = document.getElementById("nav-avatar-btn");
+  const dropdown = document.getElementById("nav-user-dropdown");
+  avatarBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown?.classList.toggle("open");
+    avatarBtn.setAttribute("aria-expanded", String(isOpen));
+  });
+  document.addEventListener("click", () => dropdown?.classList.remove("open"));
+
+  // ── Logout ──
+  function doLogout() {
+    logout();
+    window.location.href = "/";
+  }
+  document
+    .getElementById("nav-logout-btn")
+    ?.addEventListener("click", doLogout);
+  document
+    .getElementById("nav-mobile-logout")
+    ?.addEventListener("click", doLogout);
+</script>
