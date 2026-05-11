@@ -301,11 +301,11 @@ services:
       MATCH_THRESHOLD: ${MATCH_THRESHOLD:-0.60}
       MAX_DISTANCIA_KM: ${MAX_DISTANCIA_KM:-10.0}
     ports:
-      - "8083:8083"
+      - "8084:8084"
     networks:
       - ss-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/health || exit 1"]
       interval: 20s
       timeout: 10s
       retries: 5

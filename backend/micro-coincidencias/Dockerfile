@@ -46,12 +46,12 @@ COPY app ./app
 RUN addgroup --system ssgroup && adduser --system --ingroup ssgroup ssuser
 USER ssuser
 
-EXPOSE 8083
+EXPOSE 8084
 
 # Gunicorn con workers Uvicorn para producción
 # En desarrollo puedes reemplazar por: uvicorn app.main:app --reload
 CMD ["gunicorn", "app.main:app", \
      "--workers", "2", \
      "--worker-class", "uvicorn.workers.UvicornWorker", \
-     "--bind", "0.0.0.0:8083", \
+     "--bind", "0.0.0.0:8084", \
      "--timeout", "120"]

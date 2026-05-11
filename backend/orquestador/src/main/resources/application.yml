@@ -69,7 +69,7 @@ spring:
 
         # ── Motor de Coincidencias (Micro 3) ──────────────────
         - id: coincidencias-route
-          uri: http://micro-coincidencias:8083
+          uri: http://micro-coincidencias:8084
           predicates:
             - Path=/api/coincidencias/**
           filters:
@@ -191,7 +191,7 @@ springdoc:
       - name: micro-mascotas
         url: http://micro-mascotas:8082/api-docs
       - name: micro-coincidencias
-        url: http://micro-coincidencias:8083/openapi.json
+        url: http://micro-coincidencias:8084/openapi.json
 
 # ── Logging ───────────────────────────────────────────────────
 logging:
