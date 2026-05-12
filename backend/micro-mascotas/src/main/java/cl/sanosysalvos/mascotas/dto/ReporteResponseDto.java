@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -80,8 +81,8 @@ public class ReporteResponseDto {
                 .zona(d.getZona())
                 .usuarioId(d.getUsuarioId() != null ? UUID.fromString(d.getUsuarioId()) : null)
                 .fotos(fotos)
-                .createdAt(d.getCreatedAt())
-                .updatedAt(d.getUpdatedAt())
+                .createdAt(d.getCreatedAt() != null ? d.getCreatedAt().atOffset(ZoneOffset.UTC) : null)
+                .updatedAt(d.getUpdatedAt() != null ? d.getUpdatedAt().atOffset(ZoneOffset.UTC) : null)
                 .build();
     }
 
