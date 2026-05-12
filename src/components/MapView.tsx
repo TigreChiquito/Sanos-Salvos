@@ -6,6 +6,12 @@ import { apiFetch } from '../lib/api';
 
 /* ─── Types ─── */
 
+interface FotoDto {
+  id: string;
+  url: string;
+  orden: number;
+}
+
 /** Formato que devuelve GET /api/reportes del backend (MongoDB read model) */
 interface ReporteAPI {
   id: string;
@@ -18,9 +24,9 @@ interface ReporteAPI {
   descripcion: string | null;
   lat: number;
   lng: number;
-  fotosUrls: string[];
+  fotos: FotoDto[];
   estado: string;
-  fechaCreacion: string; // ISO 8601
+  createdAt: string; // ISO 8601
 }
 
 /** Formato interno normalizado que usa el componente */
@@ -63,18 +69,19 @@ function formatFecha(iso: string): string {
 }
 
 function normalizeReporte(r: ReporteAPI): Report {
+  const fotosUrls = (r.fotos ?? []).map(f => f.url);
   return {
     id:        r.id,
     tipo:      r.tipo,
     animal:    r.animal,
-    nombre:    r.nombre ?? 'Sin nombre',
+    nombre:    r.nombre || 'Sin nombre',
     raza:      r.raza   ?? 'Raza desconocida',
     color:     r.color  ?? 'Color desconocido',
     tamano:    r.tamano ?? '',
-    fecha:     formatFecha(r.fechaCreacion),
+    fecha:     formatFecha(r.createdAt),
     desc_larga: r.descripcion ?? 'Sin descripción.',
-    fotos:     r.fotosUrls.length ? r.fotosUrls : [PLACEHOLDER_FOTO],
-    foto:      r.fotosUrls[0] ?? PLACEHOLDER_FOTO,
+    fotos:     fotosUrls.length ? fotosUrls : [PLACEHOLDER_FOTO],
+    foto:      fotosUrls[0] ?? PLACEHOLDER_FOTO,
     lat:       r.lat,
     lng:       r.lng,
   };

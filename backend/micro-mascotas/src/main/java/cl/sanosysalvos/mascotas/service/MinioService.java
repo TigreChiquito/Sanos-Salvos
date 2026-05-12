@@ -1,7 +1,6 @@
 package cl.sanosysalvos.mascotas.service;
 
 import io.minio.*;
-import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,17 +8,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Servicio para subir y eliminar fotos de mascotas en MinIO.
  *
- * Las fotos se guardan en el bucket con la ruta:
- *   reportes/{reporteId}/{uuid}.{ext}
- *
- * Se genera una URL presignada válida por 7 días para el acceso
- * desde el frontend. En producción se puede cambiar a URLs
- * públicas permanentes si el bucket es de acceso público.
+ * El bucket se configura con política pública de lectura, por lo que las
+ * URLs son simples y permanentes: {publicUrl}/{bucket}/{bucketKey}
+ * Sin firma — el browser las accede directamente sin autenticación.
  */
 @Slf4j
 @Service
@@ -31,13 +26,13 @@ public class MinioService {
     @Value("${app.minio.bucket}")
     private String bucket;
 
+    @Value("${app.minio.public-url:http://localhost:9000}")
+    private String publicUrl;
+
     /**
-     * Sube una foto al bucket y retorna la URL presignada.
+     * Sube una foto al bucket y retorna la URL pública.
      *
-     * @param reporteId UUID del reporte al que pertenece la foto
-     * @param archivo   Archivo recibido desde el frontend
-     * @param orden     Orden de display (0 = foto principal)
-     * @return Par [bucketKey, url] donde bucketKey es la ruta interna
+     * @return Par [bucketKey, url] donde url es accesible directamente desde el browser
      */
     public String[] subirFoto(UUID reporteId, MultipartFile archivo, int orden) {
         String ext = getExtension(archivo.getOriginalFilename());
@@ -45,7 +40,7 @@ public class MinioService {
                 .formatted(reporteId, orden, UUID.randomUUID(), ext);
 
         try {
-            ensureBucketExists();
+            ensureBucketPublico();
 
             minioClient.putObject(PutObjectArgs.builder()
                     .bucket(bucket)
@@ -54,13 +49,8 @@ public class MinioService {
                     .contentType(archivo.getContentType())
                     .build());
 
-            String url = minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.GET)
-                            .bucket(bucket)
-                            .object(bucketKey)
-                            .expiry(7, TimeUnit.DAYS)
-                            .build());
+            String base = publicUrl.endsWith("/") ? publicUrl.substring(0, publicUrl.length() - 1) : publicUrl;
+            String url = base + "/" + bucket + "/" + bucketKey;
 
             log.debug("Foto subida: {}", bucketKey);
             return new String[]{bucketKey, url};
@@ -86,13 +76,19 @@ public class MinioService {
 
     // ── Privado ────────────────────────────────────────────────
 
-    private void ensureBucketExists() throws Exception {
+    private void ensureBucketPublico() throws Exception {
         boolean exists = minioClient.bucketExists(
                 BucketExistsArgs.builder().bucket(bucket).build());
         if (!exists) {
             minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
             log.info("Bucket '{}' creado en MinIO", bucket);
         }
+        // Política pública de lectura — permite GET sin autenticación
+        String policy = """
+                {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":"*","Action":"s3:GetObject","Resource":"arn:aws:s3:::%s/*"}]}
+                """.formatted(bucket);
+        minioClient.setBucketPolicy(
+                SetBucketPolicyArgs.builder().bucket(bucket).config(policy.strip()).build());
     }
 
     private String getExtension(String filename) {
