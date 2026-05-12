@@ -111,10 +111,9 @@ import NavbarApp   from '../components/NavbarApp.astro';
                 <label for="f-tamano">Tamaño</label>
                 <select id="f-tamano" name="tamano" class="rp-input rp-select">
                   <option value="">Seleccionar…</option>
-                  <option value="Muy pequeño">Muy pequeño  (&lt;5 kg)</option>
-                  <option value="Pequeño">Pequeño  (5–10 kg)</option>
-                  <option value="Mediano">Mediano  (10–25 kg)</option>
-                  <option value="Grande">Grande  (&gt;25 kg)</option>
+                  <option value="pequeño">Pequeño  (&lt;10 kg)</option>
+                  <option value="mediano">Mediano  (10–25 kg)</option>
+                  <option value="grande">Grande  (&gt;25 kg)</option>
                 </select>
               </div>
             </div>
@@ -704,34 +703,34 @@ import NavbarApp   from '../components/NavbarApp.astro';
     if (!animalInput)       { showSubmitError('Selecciona el tipo de animal.'); return; }
     if (!latInput.value)    { showSubmitError('Marca la ubicación del animal en el mapa.'); return; }
 
-    // ── Construir FormData ──
-    const fd = new FormData();
-    fd.append('tipo',   tipoInput.value);
-    fd.append('animal', animalInput.value);
-    fd.append('lat',    latInput.value);
-    fd.append('lng',    lngInput.value);
-
+    // ── Construir payload JSON (parte "datos") ──
     const nombreVal = (form.querySelector<HTMLInputElement>('input[name="nombre"]'))?.value.trim();
-    if (nombreVal) fd.append('nombre', nombreVal);
 
-    // Raza: select normal o input de texto (cuando animal = "otro")
-    const razaSelect = document.getElementById('f-raza') as HTMLSelectElement;
+    const razaSelectEl  = document.getElementById('f-raza')      as HTMLSelectElement;
     const razaOtroInput = document.getElementById('f-raza-otro') as HTMLInputElement;
-    const razaVal = razaSelect.style.display === 'none'
+    const razaVal = razaSelectEl.style.display === 'none'
       ? razaOtroInput.value.trim()
-      : razaSelect.value;
-    if (razaVal) fd.append('raza', razaVal);
+      : razaSelectEl.value;
 
-    const colorVal = (document.getElementById('f-color') as HTMLInputElement).value.trim();
-    if (colorVal) fd.append('color', colorVal);
-
+    const colorVal  = (document.getElementById('f-color')  as HTMLInputElement).value.trim();
     const tamanoVal = (document.getElementById('f-tamano') as HTMLSelectElement).value;
-    if (tamanoVal) fd.append('tamano', tamanoVal);
+    const descVal   = (document.getElementById('f-desc')   as HTMLTextAreaElement).value.trim();
 
-    const descVal = (document.getElementById('f-desc') as HTMLTextAreaElement).value.trim();
-    if (descVal) fd.append('descripcion', descVal);
+    const datos: Record<string, unknown> = {
+      tipo:   tipoInput.value,
+      animal: animalInput.value,
+      lat:    parseFloat(latInput.value),
+      lng:    parseFloat(lngInput.value),
+    };
+    if (nombreVal) datos.nombre      = nombreVal;
+    if (razaVal)   datos.raza        = razaVal;
+    if (colorVal)  datos.color       = colorVal;
+    if (tamanoVal) datos.tamano      = tamanoVal;
+    if (descVal)   datos.descripcion = descVal;
 
-    // Fotos
+    // El backend espera multipart con dos partes: "datos" (JSON) y "fotos" (archivos)
+    const fd = new FormData();
+    fd.append('datos', new Blob([JSON.stringify(datos)], { type: 'application/json' }));
     selectedFiles.forEach(file => fd.append('fotos', file));
 
     // ── Enviar al backend ──

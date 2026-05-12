@@ -20,9 +20,11 @@ Los usuarios publican reportes con fotos y ubicación geográfica. Un motor de i
 
 Asegúrate de tener instalado:
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (con Docker Compose v2)
-- [Node.js](https://nodejs.org/) 20+ y [pnpm](https://pnpm.io/) (o npm)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (con WSL2 o Hyper-V habilitado)
+- [Node.js](https://nodejs.org/) 20+ y [pnpm](https://pnpm.io/)
 - Una cuenta de Google Cloud con un proyecto OAuth2 configurado ([ver instrucciones](#google-cloud-console))
+
+> **Primera vez con pnpm:** si al ejecutar `pnpm install` aparece el error `ERR_PNPM_IGNORED_BUILDS`, ejecuta `pnpm approve-builds`, selecciona `esbuild` y `sharp` con la barra espaciadora y confirma. Luego vuelve a correr `pnpm install`.
 
 ---
 
@@ -107,8 +109,8 @@ curl http://localhost:8083/connectors
 Abre una nueva terminal en la raíz del proyecto:
 
 ```bash
-npm install   # o: pnpm install
-npm run dev   # o: pnpm dev
+pnpm install
+pnpm dev
 ```
 
 El frontend estará disponible en **http://localhost:4321**
@@ -163,7 +165,7 @@ Para que el login con Google funcione debes configurar un OAuth2 Client:
 ┌─────────┐  ┌──────────┐  ┌─────────────────────┐
 │ micro-  │  │ micro-   │  │ micro-coincidencias  │
 │usuarios │  │mascotas  │  │ FastAPI + ML         │
-│  :8081  │  │  :8082   │  │ :8083               │
+│  :8081  │  │  :8082   │  │ :8084               │
 │ OAuth2  │  │ CQRS     │  │ sentence-transformers│
 │ JWT     │  │ MinIO    │  │ CLIP · pgvector      │
 └────┬────┘  └─────┬────┘  └──────────┬──────────┘
@@ -268,4 +270,4 @@ sanos-salvos/
 
 **Arranque secuencial:** Los microservicios esperan a que sus dependencias estén `healthy` antes de iniciar. El orden es: postgres/mongodb/kafka → debezium/micro-usuarios/micro-mascotas → micro-coincidencias → orquestador.
 
-**Puerto 8083:** Tanto Debezium como micro-coincidencias exponen el puerto 8083. En el entorno Docker esto no genera conflicto porque se comunican por la red interna, pero al acceder desde el host puede ser ambiguo. Se recomienda mover micro-coincidencias al puerto 8084 en una próxima iteración.
+**Puertos sin conflicto:** Debezium corre en el puerto `8083` y `micro-coincidencias` en el `8084`. El orquestador enruta internamente a `micro-coincidencias:8084`.

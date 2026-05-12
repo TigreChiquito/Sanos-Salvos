@@ -18,16 +18,11 @@ spring:
       routes:
 
         # ── Auth y Usuarios (Micro 1) ──────────────────────────
-        # Rutas públicas (OAuth2 flow de Google, no requieren JWT)
+        # OAuth2 redirect flow — sin CircuitBreaker (los 302 no son compatibles con él)
         - id: oauth2-route
           uri: http://micro-usuarios:8081
           predicates:
             - Path=/oauth2/**, /login/oauth2/**
-          filters:
-            - name: CircuitBreaker
-              args:
-                name: usuariosCircuitBreaker
-                fallbackUri: forward:/fallback/usuarios
 
         # Rutas de auth (login/me/logout) — JWT validado en el gateway
         - id: auth-route
@@ -39,10 +34,6 @@ spring:
               args:
                 name: usuariosCircuitBreaker
                 fallbackUri: forward:/fallback/usuarios
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenish-rate: 10
-                redis-rate-limiter.burst-capacity: 20
 
         # Perfil de usuarios internos
         - id: usuarios-route
@@ -69,7 +60,7 @@ spring:
 
         # ── Motor de Coincidencias (Micro 3) ──────────────────
         - id: coincidencias-route
-          uri: http://micro-coincidencias:8083
+          uri: http://micro-coincidencias:8084
           predicates:
             - Path=/api/coincidencias/**
           filters:
@@ -164,17 +155,8 @@ app:
   cors:
     allowed-origins: ${FRONTEND_URL:http://localhost:4321}
 
-  # Rutas que NO requieren JWT (públicas)
-  public-paths:
-    - /oauth2/**
-    - /login/oauth2/**
-    - /api/auth/logout
-    - /fallback/**
-    - /actuator/health
-    - /swagger-ui/**
-    - /api-docs/**
-    # GET de reportes es público (mapa sin login)
-    - /api/reportes
+  # Rutas que NO requieren JWT (públicas) — comma-separated para compatibilidad con @Value
+  public-paths: /oauth2/**,/login/oauth2/**,/api/auth/logout,/fallback/**,/actuator/health,/swagger-ui/**,/api-docs/**
 
 # ── Swagger ───────────────────────────────────────────────────
 springdoc:
@@ -191,7 +173,7 @@ springdoc:
       - name: micro-mascotas
         url: http://micro-mascotas:8082/api-docs
       - name: micro-coincidencias
-        url: http://micro-coincidencias:8083/openapi.json
+        url: http://micro-coincidencias:8084/openapi.json
 
 # ── Logging ───────────────────────────────────────────────────
 logging:

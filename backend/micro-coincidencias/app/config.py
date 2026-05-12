@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     # ── API ───────────────────────────────────────────────────
     app_name: str = "micro-coincidencias"
-    app_port: int = 8083
+    app_port: int = 8084
     debug: bool = False
 
 

@@ -91,6 +91,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_4LW_COMMANDS_WHITELIST: "*"
     volumes:
       - zookeeper-data:/var/lib/zookeeper/data
       - zookeeper-log:/var/lib/zookeeper/log
@@ -99,9 +100,9 @@ services:
     networks:
       - ss-network
     healthcheck:
-      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      test: ["CMD-SHELL", "cub zk-ready localhost:2181 30 2>/dev/null || exit 1"]
       interval: 10s
-      timeout: 5s
+      timeout: 35s
       retries: 5
       start_period: 15s
 
@@ -267,6 +268,7 @@ services:
       MONGO_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_URL: http://localhost:9000
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET_FOTOS: ${MINIO_BUCKET_FOTOS:-fotos-mascotas}
@@ -301,11 +303,11 @@ services:
       MATCH_THRESHOLD: ${MATCH_THRESHOLD:-0.60}
       MAX_DISTANCIA_KM: ${MAX_DISTANCIA_KM:-10.0}
     ports:
-      - "8083:8083"
+      - "8084:8084"
     networks:
       - ss-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/health || exit 1"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8084/health')\" || exit 1"]
       interval: 20s
       timeout: 10s
       retries: 5
@@ -329,6 +331,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4321}
+      APP_PUBLIC_PATHS: "/oauth2/**,/login/oauth2/**,/api/auth/logout,/fallback/**,/actuator/health,/swagger-ui/**,/api-docs/**"
     ports:
       - "8080:8080"
     networks:

@@ -17,6 +17,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# HOME=/app hace que tanto el build como el runtime resuelvan ~ → /app
+# CLIP usa ~/.cache/clip, HF usa HF_HOME, torch usa TORCH_HOME
+ENV HOME=/app \
+    HF_HOME=/app/.cache/huggingface \
+    TORCH_HOME=/app/.cache/torch
+
 # ── Instalar PyTorch CPU-only primero (paquete pesado, capa cacheada) ──
 RUN pip install --no-cache-dir \
     torch==2.4.1+cpu \
@@ -43,15 +49,16 @@ print('Modelo CLIP descargado')"
 COPY app ./app
 
 # Usuario no-root por seguridad
-RUN addgroup --system ssgroup && adduser --system --ingroup ssgroup ssuser
+RUN addgroup --system ssgroup && adduser --system --ingroup ssgroup ssuser \
+    && chown -R ssuser:ssgroup /app/.cache
 USER ssuser
 
-EXPOSE 8083
+EXPOSE 8084
 
 # Gunicorn con workers Uvicorn para producción
 # En desarrollo puedes reemplazar por: uvicorn app.main:app --reload
 CMD ["gunicorn", "app.main:app", \
      "--workers", "2", \
      "--worker-class", "uvicorn.workers.UvicornWorker", \
-     "--bind", "0.0.0.0:8083", \
+     "--bind", "0.0.0.0:8084", \
      "--timeout", "120"]

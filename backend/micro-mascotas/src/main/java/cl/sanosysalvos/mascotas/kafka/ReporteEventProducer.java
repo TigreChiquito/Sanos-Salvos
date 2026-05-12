@@ -54,23 +54,23 @@ public class ReporteEventProducer {
     // ── Privado ────────────────────────────────────────────────
 
     private void publish(String topic, Reporte r, String eventType, List<String> urlsFotos) {
-        Map<String, Object> payload = Map.of(
-                "eventType",   eventType,
-                "reporteId",   r.getId().toString(),
-                "tipo",        r.getTipo(),
-                "animal",      r.getAnimal(),
-                "estado",      r.getEstado(),
-                "nombre",      r.getNombre() != null ? r.getNombre() : "",
-                "raza",        r.getRaza()   != null ? r.getRaza()   : "",
-                "color",       r.getColor()  != null ? r.getColor()  : "",
-                "tamano",      r.getTamano() != null ? r.getTamano() : "",
-                "descripcion", r.getDescripcion() != null ? r.getDescripcion() : "",
-                "lat",         r.getLat().doubleValue(),
-                "lng",         r.getLng().doubleValue(),
-                "zona",        r.getZona() != null ? r.getZona() : "",
-                "usuarioId",   r.getUsuarioId().toString(),
-                "urlsFotos",   urlsFotos,
-                "timestamp",   OffsetDateTime.now().toString()
+        Map<String, Object> payload = Map.ofEntries(
+                Map.entry("eventType",   eventType),
+                Map.entry("reporteId",   r.getId().toString()),
+                Map.entry("tipo",        r.getTipo()),
+                Map.entry("animal",      r.getAnimal()),
+                Map.entry("estado",      r.getEstado()),
+                Map.entry("nombre",      r.getNombre() != null ? r.getNombre() : ""),
+                Map.entry("raza",        r.getRaza()   != null ? r.getRaza()   : ""),
+                Map.entry("color",       r.getColor()  != null ? r.getColor()  : ""),
+                Map.entry("tamano",      r.getTamano() != null ? r.getTamano() : ""),
+                Map.entry("descripcion", r.getDescripcion() != null ? r.getDescripcion() : ""),
+                Map.entry("lat",         r.getLat().doubleValue()),
+                Map.entry("lng",         r.getLng().doubleValue()),
+                Map.entry("zona",        r.getZona() != null ? r.getZona() : ""),
+                Map.entry("usuarioId",   r.getUsuarioId().toString()),
+                Map.entry("urlsFotos",   urlsFotos),
+                Map.entry("timestamp",   OffsetDateTime.now().toString())
         );
 
         kafkaTemplate.send(topic, r.getId().toString(), payload)

@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -67,8 +67,8 @@ public class ReporteDocument {
     private String usuarioFotoPerfil;
 
     // ── Auditoría ──────────────────────────────────────────────
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
 
     // ── Foto embebida ──────────────────────────────────────────
     @Data

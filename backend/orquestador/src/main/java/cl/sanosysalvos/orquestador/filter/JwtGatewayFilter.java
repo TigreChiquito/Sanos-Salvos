@@ -80,9 +80,6 @@ public class JwtGatewayFilter implements WebFilter {
                 .header("X-User-Id",    userId)
                 .header("X-User-Email", email)
                 .header("X-User-Name",  name)
-                // Quitar el Authorization para que los micros no lo revaliden
-                // (pueden confiar en X-User-Id que viene del gateway)
-                .headers(h -> h.remove(HttpHeaders.AUTHORIZATION))
                 .build();
 
         return chain.filter(exchange.mutate().request(enrichedRequest).build());

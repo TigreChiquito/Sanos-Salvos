@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -89,7 +89,7 @@ public class ReporteSyncConsumer {
                 .zona((String) payload.get("zona"))
                 .usuarioId((String) payload.get("usuarioId"))
                 .fotos(fotosEmbedded)
-                .updatedAt(OffsetDateTime.now())
+                .updatedAt(Instant.now())
                 .build();
 
         // Si ya existe, preservar el createdAt original
@@ -99,7 +99,7 @@ public class ReporteSyncConsumer {
                     mongoRepository.save(doc);
                 },
                 () -> {
-                    doc.setCreatedAt(OffsetDateTime.now());
+                    doc.setCreatedAt(Instant.now());
                     mongoRepository.save(doc);
                 }
         );
