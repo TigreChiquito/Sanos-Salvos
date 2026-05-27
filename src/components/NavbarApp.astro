@@ -204,8 +204,8 @@ const { active } = Astro.props;
   document.addEventListener('click', () => dropdown?.classList.remove('open'));
 
   // ── Logout ──
-  function doLogout() {
-    logout();
+  async function doLogout() {
+    await logout();
     window.location.href = '/';
   }
   document.getElementById('app-logout-btn')?.addEventListener('click', doLogout);
