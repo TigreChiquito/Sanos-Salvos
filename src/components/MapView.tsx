@@ -392,7 +392,7 @@ export default function MapView() {
         <div className="mv-cards-list">
           {loading ? (
             <div className="mv-empty">
-              <div className="mv-empty-icon" style={{ animation: 'spin 1.5s linear infinite' }}>🐾</div>
+              <div className="mv-empty-icon mv-spinning">🐾</div>
               <p>Cargando reportes…</p>
             </div>
           ) : fetchError ? (
@@ -412,7 +412,7 @@ export default function MapView() {
                 id={`mv-card-${r.id}`}
                 className={`mv-card${selectedId === r.id ? ' selected' : ''}`}
               >
-                <div className="mv-card-top" onClick={() => flyTo(r.id)} style={{ cursor: 'pointer' }}>
+                <div className="mv-card-top" onClick={() => flyTo(r.id)}>
                   <img className="mv-card-photo" src={r.foto} alt={r.nombre} loading="lazy" />
                   <div className="mv-card-info">
                     <div className="mv-card-name">
