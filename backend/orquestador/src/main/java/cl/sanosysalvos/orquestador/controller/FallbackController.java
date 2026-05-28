@@ -1,5 +1,6 @@
 package cl.sanosysalvos.orquestador.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.util.Map;
  * El frontend debería mostrar un mensaje amigable al usuario cuando
  * reciba una respuesta de fallback (status 503).
  */
+@Hidden
 @Slf4j
 @RestController
 public class FallbackController {

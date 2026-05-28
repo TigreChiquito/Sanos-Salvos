@@ -3,6 +3,7 @@ package cl.sanosysalvos.mascotas.dto;
 import cl.sanosysalvos.mascotas.model.mongo.ReporteDocument;
 import cl.sanosysalvos.mascotas.model.pg.Foto;
 import cl.sanosysalvos.mascotas.model.pg.Reporte;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
@@ -14,23 +15,55 @@ import java.util.UUID;
 
 @Data
 @Builder
+@Schema(description = "Reporte de mascota perdida o encontrada")
 public class ReporteResponseDto {
 
+    @Schema(description = "UUID del reporte", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID id;
+
+    @Schema(description = "Tipo de reporte", allowableValues = {"perdido", "encontrado"}, example = "perdido")
     private String tipo;
+
+    @Schema(description = "Tipo de animal", allowableValues = {"perro", "gato", "otro"}, example = "perro")
     private String animal;
+
+    @Schema(description = "Estado del reporte", allowableValues = {"activo", "resuelto", "eliminado"}, example = "activo")
     private String estado;
+
+    @Schema(description = "Nombre de la mascota", example = "Firulais")
     private String nombre;
+
+    @Schema(description = "Raza", example = "Labrador")
     private String raza;
+
+    @Schema(description = "Color del pelaje", example = "café con manchas blancas")
     private String color;
+
+    @Schema(description = "Tamaño", allowableValues = {"pequeño", "mediano", "grande"}, example = "mediano")
     private String tamano;
+
+    @Schema(description = "Descripción adicional")
     private String descripcion;
+
+    @Schema(description = "Latitud", example = "-33.4489")
     private BigDecimal lat;
+
+    @Schema(description = "Longitud", example = "-70.6693")
     private BigDecimal lng;
+
+    @Schema(description = "Zona o comuna", example = "Providencia")
     private String zona;
+
+    @Schema(description = "UUID del usuario que creó el reporte")
     private UUID usuarioId;
+
+    @Schema(description = "Fotos de la mascota")
     private List<FotoDto> fotos;
+
+    @Schema(description = "Fecha y hora de creación")
     private OffsetDateTime createdAt;
+
+    @Schema(description = "Fecha y hora de última actualización")
     private OffsetDateTime updatedAt;
 
     /** Convierte entidad JPA → DTO (para respuestas de escritura) */
@@ -90,9 +123,16 @@ public class ReporteResponseDto {
 
     @Data
     @Builder
+    @Schema(description = "Foto de la mascota almacenada en MinIO")
     public static class FotoDto {
+
+        @Schema(description = "UUID de la foto")
         private UUID id;
+
+        @Schema(description = "URL pública de la imagen")
         private String url;
+
+        @Schema(description = "Orden de la foto en la galería", example = "0")
         private Integer orden;
 
         public static FotoDto from(Foto f) {

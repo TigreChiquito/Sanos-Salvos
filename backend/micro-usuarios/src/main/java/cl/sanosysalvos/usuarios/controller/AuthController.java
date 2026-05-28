@@ -6,6 +6,11 @@ import cl.sanosysalvos.usuarios.model.Usuario;
 import cl.sanosysalvos.usuarios.security.JwtTokenProvider;
 import cl.sanosysalvos.usuarios.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +49,12 @@ public class AuthController {
     @GetMapping("/api/auth/me")
     @Operation(summary = "Perfil del usuario autenticado",
                security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Perfil obtenido correctamente",
+                     content = @Content(schema = @Schema(implementation = AuthResponseDto.class))),
+        @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content)
+    })
     public ResponseEntity<AuthResponseDto> me(
             @AuthenticationPrincipal UUID userId) {
 
@@ -68,6 +79,10 @@ public class AuthController {
     @PostMapping("/api/auth/logout")
     @Operation(summary = "Cerrar sesión",
                security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Sesión cerrada", content = @Content),
+        @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
+    })
     public ResponseEntity<Void> logout() {
         // Con JWT stateless no hay nada que invalidar en el servidor.
         // Para revocación real, implementar una blacklist en Redis (fase futura).
@@ -81,7 +96,14 @@ public class AuthController {
     @GetMapping("/api/usuarios/{id}")
     @Operation(summary = "Perfil de usuario por ID",
                security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<UsuarioDto> getUsuario(@PathVariable UUID id) {
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Perfil encontrado",
+                     content = @Content(schema = @Schema(implementation = UsuarioDto.class))),
+        @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content)
+    })
+    public ResponseEntity<UsuarioDto> getUsuario(
+            @Parameter(description = "UUID del usuario") @PathVariable UUID id) {
         return usuarioService.findById(id)
                 .map(u -> ResponseEntity.ok(UsuarioDto.from(u)))
                 .orElse(ResponseEntity.notFound().build());
