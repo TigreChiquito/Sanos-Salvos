@@ -18,11 +18,12 @@ pnpm preview      # Preview production build
 ### Backend (Docker Compose)
 ```bash
 # From /backend directory
-docker compose up -d                        # Start all infrastructure + services
-docker compose --profile dev up -d          # Include dev tools (kafka-ui, mongo-express)
-docker compose up -d micro-usuarios         # Start a single service
-docker compose logs -f micro-mascotas       # Tail logs for a service
-docker compose down -v                      # Stop all and remove volumes
+docker compose up -d                              # Start all infrastructure + services
+docker compose --profile dev up -d                # Include dev tools (kafka-ui, mongo-express)
+docker compose up -d micro-usuarios               # Start a single service
+docker compose up --scale micro-mascotas=2 -d     # Scale a service to N replicas
+docker compose logs -f micro-mascotas             # Tail logs for a service (all replicas)
+docker compose down -v                            # Stop all and remove volumes
 ```
 
 ### Individual Java microservices (from their directory)
@@ -45,20 +46,26 @@ pytest                                       # Run tests
 ```
 Browser
   └── Frontend (Astro/React :4321)
-        └── Orquestador / Spring Cloud Gateway (:8080)
-              ├── micro-usuarios (:8081)   — Auth, JWT, user profiles
-              ├── micro-mascotas (:8082)   — Reports, photos (CQRS)
-              └── micro-coincidencias (:8084) — ML matching engine (FastAPI)
+        └── NGINX Load Balancer (:8080)          — entry point, Docker DNS round-robin
+              └── Orquestador / Spring Cloud Gateway
+                    ├── micro-usuarios   — Auth, JWT, user profiles  (scalable)
+                    ├── micro-mascotas   — Reports, photos (CQRS)    (scalable)
+                    └── micro-coincidencias — ML matching (FastAPI)  (scalable)
 ```
+
+To scale any service: `docker compose up --scale micro-mascotas=2 -d`
 
 ### Infrastructure (all in `backend/docker-compose.yml`)
 | Service | Port | Purpose |
 |---|---|---|
+| NGINX | 8080 (host) | Load balancer — entry point for all API traffic |
 | PostgreSQL (pgvector) | 5432 | Source of truth (with 512-dim vector columns) |
 | MongoDB | 27017 | Read model (denormalized for map queries) |
 | Kafka | 9092/29092 | Async event bus between microservices |
 | Debezium | 8083 | CDC: PostgreSQL → Kafka topics |
 | MinIO | 9000/9001 | Object storage for pet photos (S3-compatible) |
+
+**Scaling:** microservices and orquestador have no fixed `container_name` or host ports — scale freely with `docker compose up --scale <service>=N -d`. NGINX resolves Docker DNS on each request (`resolver 127.0.0.11`) for automatic round-robin.
 
 ### Data Flow
 1. User submits report → `micro-mascotas` writes to PostgreSQL + uploads photo to MinIO
@@ -90,16 +97,29 @@ Browser
 - `onAuthChange` provides reactive session state to components
 - OAuth2 callback landing page: `/acceder`
 
+### User Profile (`/perfil`)
+- Page `src/pages/perfil.astro` — accessible from the user dropdown in both navbars
+- Shows Google profile photo (or initials fallback) in navbar avatar and profile header
+- Editable fields: `telefono` (contact), `notifEmail`, `notifSistema` (notification prefs)
+- Saved via `PATCH /api/usuarios/me` → persisted in PostgreSQL
+- `User` interface in `auth.ts` includes `telefono`, `notifEmail`, `notifSistema`
+- DB columns added: `usuarios.telefono VARCHAR(20)`, `usuarios.notif_email BOOLEAN`, `usuarios.notif_sistema BOOLEAN`
+
 ## Key File Locations
 
 | What | Where |
 |---|---|
 | Frontend API client | `src/lib/api.ts` |
 | Auth helpers | `src/lib/auth.ts` |
+| User profile page | `src/pages/perfil.astro` |
 | Interactive map | `src/components/MapView.tsx` |
+| Navbar (app pages) | `src/components/NavbarApp.astro` |
+| Navbar (landing) | `src/components/Navbar.astro` |
+| NGINX config | `backend/nginx/nginx.conf` |
 | Gateway JWT filter | `backend/orquestador/src/.../JwtGatewayFilter.java` |
 | Matching algorithm | `backend/micro-coincidencias/app/services/scoring_service.py` |
-| DB schema / migrations | `backend/micro-mascotas/src/main/resources/` |
+| DB schema | `backend/postgres/init/01-schema.sql` |
+| Profile update DTO | `backend/micro-usuarios/src/.../dto/ActualizarPerfilDto.java` |
 | Env variables template | `backend/.env.example` |
 
 ## Environment Variables
@@ -115,5 +135,5 @@ Copy `backend/.env.example` to `backend/.env` before running Docker Compose. Req
 - **Frontend:** Astro v6, React 18, TypeScript, Tailwind CSS, Leaflet (maps)
 - **Backend (Java):** Spring Boot 3.3 / Java 21, Spring Cloud Gateway (WebFlux), Spring Security, jjwt
 - **Backend (Python):** FastAPI, sentence-transformers, CLIP (PyTorch CPU), rapidfuzz, pgvector
-- **Infrastructure:** PostgreSQL 16 + pgvector, MongoDB 7, Kafka (Confluent), Debezium 2.6, MinIO
+- **Infrastructure:** PostgreSQL 16 + pgvector, MongoDB 7, Kafka (Confluent), Debezium 2.6, MinIO, NGINX 1.27
 - **Build:** pnpm (frontend), Maven (Java), pip (Python), Docker multi-stage builds

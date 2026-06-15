@@ -12,7 +12,7 @@ Los usuarios publican reportes con fotos y ubicación geográfica. Un motor de i
 
 **Backend:** Spring Boot 3 (Java 21) · FastAPI (Python 3.11) · Spring Cloud Gateway
 
-**Infraestructura:** PostgreSQL + pgvector · MongoDB · Apache Kafka · Debezium · MinIO · Docker
+**Infraestructura:** PostgreSQL + pgvector · MongoDB · Apache Kafka · Debezium · MinIO · NGINX · Docker
 
 **Observabilidad:** Prometheus · Grafana
 
@@ -83,10 +83,11 @@ Este comando construye y levanta todos los servicios: bases de datos, Kafka, Deb
 Los servicios están listos cuando ves en los logs:
 
 ```
-ss-micro-usuarios      | Started UsuariosApplication in X.X seconds
-ss-micro-mascotas      | Started MascotasApplication in X.X seconds
-ss-micro-coincidencias | Application startup complete.
-ss-orquestador         | Started OrquestadorApplication in X.X seconds
+backend-micro-usuarios-1      | Started UsuariosApplication in X.X seconds
+backend-micro-mascotas-1      | Started MascotasApplication in X.X seconds
+backend-micro-coincidencias-1 | Application startup complete.
+backend-orquestador-1         | Started OrquestadorApplication in X.X seconds
+ss-nginx                      | ready
 ```
 
 ### 5. Registrar el conector Debezium (una sola vez)
@@ -127,7 +128,7 @@ Para que el login con Google funcione debes configurar un OAuth2 Client:
 2. Crear un **OAuth 2.0 Client ID** de tipo "Web application"
 3. En **Authorized redirect URIs**, agregar exactamente:
    ```
-   http://localhost:8081/login/oauth2/code/google
+   http://localhost:8080/login/oauth2/code/google
    ```
 4. Copiar el **Client ID** y **Client Secret** al archivo `backend/.env`
 5. En **OAuth consent screen** → agregar tu email en "Test users" (mientras esté en modo Testing)
@@ -155,10 +156,18 @@ Para que el login con Google funcione debes configurar un OAuth2 Client:
 │  Frontend  (Astro + React)      │
 │  http://localhost:4321          │
 └────────────┬────────────────────┘
-             │ HTTPS · JWT Bearer
+             │ HTTP · JWT Bearer
              ▼
 ┌─────────────────────────────────┐
-│  Orquestador (API Gateway)      │  :8080
+│  NGINX  (Load Balancer)         │  :8080
+│  · Docker DNS round-robin       │
+│  · resolver 127.0.0.11          │
+│  · timeout 35s (ML)             │
+└────────────┬────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────┐
+│  Orquestador (API Gateway)      │  (sin puerto de host, N réplicas)
 │  Spring Cloud Gateway           │
 │  · Valida JWT                   │
 │  · CORS                         │
@@ -169,9 +178,9 @@ Para que el login con Google funcione debes configurar un OAuth2 Client:
 ┌─────────┐  ┌──────────┐  ┌─────────────────────┐
 │ micro-  │  │ micro-   │  │ micro-coincidencias  │
 │usuarios │  │mascotas  │  │ FastAPI + ML         │
-│  :8081  │  │  :8082   │  │ :8084               │
 │ OAuth2  │  │ CQRS     │  │ sentence-transformers│
 │ JWT     │  │ MinIO    │  │ CLIP · pgvector      │
+│(scalable│  │(scalable)│  │   (scalable)         │
 └────┬────┘  └─────┬────┘  └──────────┬──────────┘
      │             │                   │
      └─────────────┴───────────────────┘
@@ -247,13 +256,17 @@ GRAFANA_ADMIN_PASSWORD=tu-password-seguro
 ## Comandos útiles
 
 ```bash
-# Ver logs en tiempo real de un servicio
+# Ver logs en tiempo real de un servicio (todas sus réplicas)
 docker compose logs -f micro-mascotas
+
+# Escalar un microservicio a N réplicas (NGINX distribuye automáticamente)
+docker compose up --scale micro-mascotas=2 -d
+docker compose up --scale micro-usuarios=2 --scale orquestador=2 -d
 
 # Reiniciar solo un microservicio (sin recompilar)
 docker compose restart micro-coincidencias
 
-# Ver estado de todos los servicios
+# Ver estado de todos los servicios y réplicas
 docker compose ps
 
 # Levantar solo la infraestructura (sin los microservicios)
@@ -283,25 +296,29 @@ sanos-salvos/
 │   │   ├── index.astro      # Landing page
 │   │   ├── acceder.astro    # Login con Google
 │   │   ├── mapa.astro       # Mapa de reportes
-│   │   └── reportar.astro   # Publicar nuevo reporte
+│   │   ├── reportar.astro   # Publicar nuevo reporte
+│   │   └── perfil.astro     # Perfil de usuario (contacto + notificaciones)
 │   └── components/
 │       ├── MapView.tsx      # Mapa Leaflet interactivo
-│       └── NavbarApp.astro  # Navbar con sesión activa
+│       ├── Navbar.astro     # Navbar landing (con dropdown de usuario)
+│       └── NavbarApp.astro  # Navbar app (con dropdown de usuario)
 └── backend/
     ├── .env.example         # Plantilla de variables
     ├── docker-compose.yml   # Toda la infraestructura
-    ├── postgres/init/       # Schema SQL inicial
+    ├── nginx/
+    │   └── nginx.conf       # Load balancer: round-robin al orquestador
+    ├── postgres/init/       # Schema SQL inicial (incluye telefono, notif_*)
     ├── kafka/connectors/    # Configuración Debezium
     ├── monitoring/
     │   ├── prometheus/
-    │   │   └── prometheus.yml       # Scrape config (todos los micros)
+    │   │   └── prometheus.yml       # Scrape config (usa nombres de servicio Docker)
     │   └── grafana/
     │       ├── provisioning/        # Datasource + dashboard providers
     │       └── dashboards/          # sanos-salvos-overview.json
-    ├── micro-usuarios/      # Spring Boot :8081
+    ├── micro-usuarios/      # Spring Boot — incluye PATCH /api/usuarios/me
     ├── micro-mascotas/      # Spring Boot :8082
     ├── micro-coincidencias/ # FastAPI :8084
-    └── orquestador/         # Spring Cloud Gateway :8080
+    └── orquestador/         # Spring Cloud Gateway
 ```
 
 ---
@@ -310,6 +327,8 @@ sanos-salvos/
 
 **Primera ejecución lenta:** Los modelos de ML (sentence-transformers + CLIP) se descargan durante el `docker build` del contenedor `micro-coincidencias`. Tras el primer build quedan cacheados en la imagen Docker.
 
-**Arranque secuencial:** Los microservicios esperan a que sus dependencias estén `healthy` antes de iniciar. El orden es: postgres/mongodb/kafka → debezium/micro-usuarios/micro-mascotas → micro-coincidencias → orquestador.
+**Arranque secuencial:** Los microservicios esperan a que sus dependencias estén `healthy` antes de iniciar. El orden es: postgres/mongodb/kafka → debezium/micro-usuarios/micro-mascotas → micro-coincidencias → orquestador → nginx.
 
-**Puertos sin conflicto:** Debezium corre en el puerto `8083` y `micro-coincidencias` en el `8084`. El orquestador enruta internamente a `micro-coincidencias:8084`.
+**Balanceo de carga:** NGINX (`ss-nginx`) escucha en `localhost:8080` y distribuye el tráfico entre todas las réplicas del orquestador usando Docker DNS (`resolver 127.0.0.11`). Los microservicios no exponen puertos al host — se accede a ellos solo desde la red interna Docker. Para escalar: `docker compose up --scale micro-mascotas=2 -d`.
+
+**Sin conflicto de puertos:** Al no tener puertos de host fijos, múltiples réplicas de un mismo servicio pueden correr sin colisionar. El único puerto de host expuesto por los microservicios de app es `8080` (NGINX).

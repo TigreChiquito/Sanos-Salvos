@@ -15,22 +15,22 @@ scrape_configs:
   - job_name: orquestador
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['ss-orquestador:8080']
+      - targets: ['orquestador:8080']
 
   # Micro Usuarios (Spring Boot)
   - job_name: micro-usuarios
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['ss-micro-usuarios:8081']
+      - targets: ['micro-usuarios:8081']
 
   # Micro Mascotas (Spring Boot)
   - job_name: micro-mascotas
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['ss-micro-mascotas:8082']
+      - targets: ['micro-mascotas:8082']
 
   # Micro Coincidencias (FastAPI)
   - job_name: micro-coincidencias
     metrics_path: /metrics
     static_configs:
-      - targets: ['ss-micro-coincidencias:8084']
+      - targets: ['micro-coincidencias:8084']

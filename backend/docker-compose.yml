@@ -215,11 +215,11 @@ services:
   # ============================================================
 
   # Micro 1 — Gestión de Usuarios (Spring Boot + OAuth2 Google + JWT)
+  # Escalar: docker compose up --scale micro-usuarios=2
   micro-usuarios:
     build:
       context: ./micro-usuarios
       dockerfile: Dockerfile
-    container_name: ss-micro-usuarios
     restart: unless-stopped
     depends_on:
       postgres:
@@ -236,8 +236,6 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4321}
-    ports:
-      - "8081:8081"
     networks:
       - ss-network
     healthcheck:
@@ -248,11 +246,11 @@ services:
       start_period: 60s
 
   # Micro 2 — Gestión de Mascotas (Spring Boot + CQRS + MinIO)
+  # Escalar: docker compose up --scale micro-mascotas=2
   micro-mascotas:
     build:
       context: ./micro-mascotas
       dockerfile: Dockerfile
-    container_name: ss-micro-mascotas
     restart: unless-stopped
     depends_on:
       postgres:
@@ -276,8 +274,6 @@ services:
       MINIO_BUCKET_FOTOS: ${MINIO_BUCKET_FOTOS:-fotos-mascotas}
       JWT_SECRET: ${JWT_SECRET}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4321}
-    ports:
-      - "8082:8082"
     networks:
       - ss-network
     healthcheck:
@@ -288,11 +284,11 @@ services:
       start_period: 60s
 
   # Micro 3 — Motor de Coincidencias (FastAPI + ML)
+  # Escalar: docker compose up --scale micro-coincidencias=2
   micro-coincidencias:
     build:
       context: ./micro-coincidencias
       dockerfile: Dockerfile
-    container_name: ss-micro-coincidencias
     restart: unless-stopped
     depends_on:
       postgres:
@@ -306,8 +302,6 @@ services:
       MAX_DISTANCIA_KM: ${MAX_DISTANCIA_KM:-10.0}
       MINIO_PUBLIC_URL: http://localhost:9000
       MINIO_INTERNAL_URL: http://minio:9000
-    ports:
-      - "8084:8084"
     networks:
       - ss-network
     healthcheck:
@@ -318,11 +312,12 @@ services:
       start_period: 90s  # más tiempo por la carga de modelos ML
 
   # Orquestador — API Gateway (Spring Cloud Gateway + Circuit Breaker)
+  # Escalar: docker compose up --scale orquestador=2
+  # El tráfico llega a través de NGINX (ss-nginx), no directamente desde el host
   orquestador:
     build:
       context: ./orquestador
       dockerfile: Dockerfile
-    container_name: ss-orquestador
     restart: unless-stopped
     depends_on:
       micro-usuarios:
@@ -336,8 +331,6 @@ services:
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4321}
       APP_PUBLIC_PATHS: "/oauth2/**,/login/oauth2/**,/api/auth/logout,/fallback/**,/actuator/health,/actuator/prometheus,/actuator/metrics/**,/swagger-ui/**,/api-docs/**"
-    ports:
-      - "8080:8080"
     networks:
       - ss-network
     healthcheck:
@@ -346,6 +339,29 @@ services:
       timeout: 10s
       retries: 5
       start_period: 45s
+
+  # NGINX — Load Balancer de entrada
+  # Expone el puerto 8080 del host y distribuye entre réplicas del orquestador
+  # usando Docker DNS round-robin (resolver 127.0.0.11)
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ss-nginx
+    restart: unless-stopped
+    depends_on:
+      orquestador:
+        condition: service_healthy
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+    networks:
+      - ss-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 
   # ============================================================
