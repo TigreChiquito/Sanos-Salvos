@@ -33,6 +33,7 @@ log = logging.getLogger(__name__)
 def procesar_reporte(
     db: Session,
     reporte_id: str,
+    usuario_id: str,
     tipo: str,
     animal: str,
     nombre: Optional[str],
@@ -43,7 +44,7 @@ def procesar_reporte(
     lat: float,
     lng: float,
     urls_fotos: list[str],
-) -> list[Coincidencia]:
+) -> list[dict]:
     """
     Punto de entrada principal. Llamado por el Kafka consumer
     al recibir un evento ss.reportes.created o ss.reportes.updated.
@@ -113,7 +114,24 @@ def procesar_reporte(
             coincidencia = _upsert_coincidencia(
                 db, reporte_id, str(candidato.id), tipo, scores
             )
-            coincidencias_creadas.append(coincidencia)
+            if tipo == "perdido":
+                uid_perdido    = usuario_id
+                uid_encontrado = str(candidato.usuario_id)
+            else:
+                uid_perdido    = str(candidato.usuario_id)
+                uid_encontrado = usuario_id
+
+            # Serializar a dict puro ANTES de cerrar la sesión DB
+            # (los objetos ORM quedan "detached" después de db.close())
+            coincidencias_creadas.append({
+                "coincidencia_id":       str(coincidencia.id),
+                "reporte_perdido_id":    str(coincidencia.reporte_perdido_id),
+                "reporte_encontrado_id": str(coincidencia.reporte_encontrado_id),
+                "score_total":           float(coincidencia.score_total),
+                "estado":                coincidencia.estado,
+                "usuario_perdido_id":    uid_perdido,
+                "usuario_encontrado_id": uid_encontrado,
+            })
             COINCIDENCIAS_ENCONTRADAS.inc()
             COINCIDENCIA_SCORE.observe(score_total)
             log.info(
@@ -124,7 +142,7 @@ def procesar_reporte(
     db.commit()
     MATCHING_DURACION.observe(time.perf_counter() - t0)
     log.info("Matching completado — %d coincidencias generadas", len(coincidencias_creadas))
-    return coincidencias_creadas
+    return coincidencias_creadas  # list[dict] con keys serializadas (sin ORM objects)
 
 
 # ── Privado ────────────────────────────────────────────────────────────────

@@ -46,7 +46,10 @@ async def start_consumer():
 
     try:
         async for msg in consumer:
-            await _procesar_mensaje(msg.value)
+            try:
+                await _procesar_mensaje(msg.value)
+            except Exception as e:
+                log.error("Error procesando mensaje Kafka (se continúa): %s", e, exc_info=True)
     except asyncio.CancelledError:
         log.info("Consumer cancelado — cerrando")
     finally:
@@ -76,6 +79,7 @@ async def _procesar_mensaje(payload: dict):
             return matching_service.procesar_reporte(
                 db=db,
                 reporte_id=reporte_id,
+                usuario_id=payload.get("usuarioId", ""),
                 tipo=payload.get("tipo", ""),
                 animal=payload.get("animal", ""),
                 nombre=payload.get("nombre") or None,
@@ -93,8 +97,12 @@ async def _procesar_mensaje(payload: dict):
         finally:
             db.close()
 
-    coincidencias = await loop.run_in_executor(_executor, _run_matching)
+    items = await loop.run_in_executor(_executor, _run_matching)
 
-    # Publicar cada coincidencia en Kafka
-    for coincidencia in coincidencias:
-        await publicar_coincidencia(coincidencia)
+    # Publicar cada coincidencia en Kafka (items son dicts puros, sin ORM objects)
+    for item in items:
+        try:
+            await publicar_coincidencia(item)
+        except Exception as e:
+            log.error("Error publicando coincidencia %s: %s",
+                      item.get("coincidencia_id"), e, exc_info=True)
