@@ -84,3 +84,18 @@ logging:
     cl.sanosysalvos: DEBUG
     org.springframework.security: INFO
     org.springframework.kafka: WARN
+
+# Actuator + Prometheus
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: micro-usuarios

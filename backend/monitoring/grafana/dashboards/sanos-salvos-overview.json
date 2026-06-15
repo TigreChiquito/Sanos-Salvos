@@ -1,0 +1,240 @@
+{
+  "title": "Sanos & Salvos — Overview",
+  "uid": "ss-overview",
+  "schemaVersion": 38,
+  "version": 2,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "tags": ["sanos-salvos"],
+  "panels": [
+
+    {
+      "id": 1,
+      "title": "Servicios activos",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 3 },
+      "targets": [
+        {
+          "expr": "up{job=~\"micro-.*|orquestador\"}",
+          "legendFormat": "{{job}}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": 2,
+      "title": "HTTP Requests/s por servicio (Java)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 3, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"micro-usuarios|micro-mascotas|orquestador\"}[1m])) by (job)",
+          "legendFormat": "{{job}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" }
+      }
+    },
+
+    {
+      "id": 3,
+      "title": "Latencia P95 por servicio — Java (ms)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 3, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\"micro-usuarios|micro-mascotas|orquestador\"}[2m])) by (job, le)) * 1000",
+          "legendFormat": "{{job}} p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ms" }
+      }
+    },
+
+    {
+      "id": 4,
+      "title": "Tasa de errores HTTP (4xx + 5xx) %",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 11, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "100 * sum(rate(http_server_requests_seconds_count{job=~\"micro-usuarios|micro-mascotas|orquestador\", status=~\"4..|5..\"}[1m])) by (job) / sum(rate(http_server_requests_seconds_count{job=~\"micro-usuarios|micro-mascotas|orquestador\"}[1m])) by (job)",
+          "legendFormat": "{{job}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "max": 100 }
+      }
+    },
+
+    {
+      "id": 5,
+      "title": "JVM Heap usado (MB)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 11, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area=\"heap\", job=~\"micro-usuarios|micro-mascotas|orquestador\"} / 1024 / 1024",
+          "legendFormat": "{{job}} — {{id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "megbytes" }
+      }
+    },
+
+    {
+      "id": 6,
+      "title": "CPU usage por proceso",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 19, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "process_cpu_usage{job=~\"micro-usuarios|micro-mascotas|orquestador\"} * 100",
+          "legendFormat": "{{job}}"
+        },
+        {
+          "expr": "rate(process_cpu_seconds_total{job=\"micro-coincidencias\"}[1m]) * 100",
+          "legendFormat": "micro-coincidencias"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "max": 100 }
+      }
+    },
+
+    {
+      "id": 7,
+      "title": "Threads JVM activos",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 19, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "jvm_threads_live_threads{job=~\"micro-usuarios|micro-mascotas|orquestador\"}",
+          "legendFormat": "{{job}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short" }
+      }
+    },
+
+    {
+      "id": 8,
+      "title": "Circuit Breaker — Estado",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 27, "w": 24, "h": 3 },
+      "targets": [
+        {
+          "expr": "resilience4j_circuitbreaker_state{job=\"orquestador\"}",
+          "legendFormat": "{{name}}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": {
+              "0": { "text": "CLOSED", "color": "green" },
+              "1": { "text": "OPEN", "color": "red" },
+              "2": { "text": "HALF_OPEN", "color": "yellow" }
+            }}
+          ]
+        }
+      }
+    },
+
+    {
+      "id": 9,
+      "title": "micro-coincidencias — Eventos Kafka recibidos/s",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 30, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(ss_kafka_eventos_total{job=\"micro-coincidencias\"}[1m])) by (tipo)",
+          "legendFormat": "{{tipo}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" }
+      }
+    },
+
+    {
+      "id": 10,
+      "title": "micro-coincidencias — Tiempo de matching P95 (s)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 30, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ss_matching_duracion_segundos_bucket{job=\"micro-coincidencias\"}[2m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(ss_matching_duracion_segundos_bucket{job=\"micro-coincidencias\"}[2m])) by (le))",
+          "legendFormat": "p50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+
+    {
+      "id": 11,
+      "title": "micro-coincidencias — Coincidencias encontradas/s",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 38, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "rate(ss_coincidencias_encontradas_total{job=\"micro-coincidencias\"}[5m])",
+          "legendFormat": "coincidencias/s"
+        },
+        {
+          "expr": "rate(ss_matching_procesados_total{job=\"micro-coincidencias\"}[5m])",
+          "legendFormat": "reportes procesados/s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "cps" }
+      }
+    },
+
+    {
+      "id": 12,
+      "title": "micro-coincidencias — Distribución de scores",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 38, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ss_coincidencia_score_bucket{job=\"micro-coincidencias\"}[10m])) by (le))",
+          "legendFormat": "p95 score"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(ss_coincidencia_score_bucket{job=\"micro-coincidencias\"}[10m])) by (le))",
+          "legendFormat": "p50 score"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1 }
+      }
+    }
+
+  ]
+}

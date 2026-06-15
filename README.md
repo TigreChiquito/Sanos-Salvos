@@ -14,6 +14,8 @@ Los usuarios publican reportes con fotos y ubicación geográfica. Un motor de i
 
 **Infraestructura:** PostgreSQL + pgvector · MongoDB · Apache Kafka · Debezium · MinIO · Docker
 
+**Observabilidad:** Prometheus · Grafana
+
 ---
 
 ## Requisitos previos
@@ -134,13 +136,15 @@ Para que el login con Google funcione debes configurar un OAuth2 Client:
 
 ## URLs de acceso local
 
-| Servicio | URL |
-|---|---|
-| **Frontend** | http://localhost:4321 |
-| **API Gateway** | http://localhost:8080 |
-| **Swagger UI** | http://localhost:8080/swagger-ui.html |
-| **MinIO Console** (fotos) | http://localhost:9001 |
-| **Health check** | http://localhost:8080/actuator/health |
+| Servicio | URL | Credenciales |
+|---|---|---|
+| **Frontend** | http://localhost:4321 | — |
+| **API Gateway** | http://localhost:8080 | — |
+| **Swagger UI** | http://localhost:8080/swagger-ui.html | — |
+| **Grafana** (dashboards) | http://localhost:3000 | admin / admin |
+| **Prometheus** | http://localhost:9090 | — |
+| **MinIO Console** (fotos) | http://localhost:9001 | minioadmin / minioadmin |
+| **Health check** | http://localhost:8080/actuator/health | — |
 
 ---
 
@@ -188,6 +192,14 @@ Para que el login con Google funcione debes configurar un OAuth2 Client:
 │   :27017     │    │  :9000   │
 │ (read model) │    │  (fotos) │
 └──────────────┘    └──────────┘
+
+Observabilidad (scrape cada 15s):
+┌──────────────┐    ┌──────────┐
+│  Prometheus  │───▶│ Grafana  │
+│   :9090      │    │  :3000   │
+│ /metrics de  │    │ dashboards│
+│ cada micro   │    │ pre-conf. │
+└──────────────┘    └──────────┘
 ```
 
 ### Motor de coincidencias
@@ -205,6 +217,30 @@ Cuando se publica un nuevo reporte, `micro-coincidencias` lo compara contra todo
 | Imagen | 10% | Coseno entre embeddings (CLIP) |
 
 Si el score total supera **0.60**, se registra una coincidencia en la base de datos.
+
+---
+
+## Observabilidad (Prometheus + Grafana)
+
+El stack incluye monitoreo completo de todos los microservicios. Prometheus recolecta métricas cada 15 segundos desde los endpoints `/actuator/prometheus` (Spring Boot) y `/metrics` (FastAPI), y Grafana las visualiza con dashboards pre-configurados que se cargan automáticamente al iniciar.
+
+Accede a Grafana en **http://localhost:3000** con las credenciales `admin / admin`.
+
+El dashboard principal **Sanos & Salvos — Overview** incluye:
+
+- Tasa de requests por microservicio (req/s)
+- Latencia de respuesta (p50, p95, p99)
+- Estado de los Circuit Breakers (CLOSED / OPEN / HALF_OPEN)
+- Uso de memoria y CPU por contenedor
+- Eventos de Kafka (mensajes producidos y consumidos)
+- Estado de la conexión a bases de datos (connection pool)
+
+Para cambiar las credenciales de Grafana, agrega estas variables a `backend/.env`:
+
+```env
+GRAFANA_ADMIN_USER=tu-usuario
+GRAFANA_ADMIN_PASSWORD=tu-password-seguro
+```
 
 ---
 
@@ -256,9 +292,15 @@ sanos-salvos/
     ├── docker-compose.yml   # Toda la infraestructura
     ├── postgres/init/       # Schema SQL inicial
     ├── kafka/connectors/    # Configuración Debezium
+    ├── monitoring/
+    │   ├── prometheus/
+    │   │   └── prometheus.yml       # Scrape config (todos los micros)
+    │   └── grafana/
+    │       ├── provisioning/        # Datasource + dashboard providers
+    │       └── dashboards/          # sanos-salvos-overview.json
     ├── micro-usuarios/      # Spring Boot :8081
     ├── micro-mascotas/      # Spring Boot :8082
-    ├── micro-coincidencias/ # FastAPI :8083
+    ├── micro-coincidencias/ # FastAPI :8084
     └── orquestador/         # Spring Cloud Gateway :8080
 ```
 

@@ -1,0 +1,36 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    project: sanos-salvos
+
+scrape_configs:
+
+  # Prometheus se monitoriza a sí mismo
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Orquestador (Spring Cloud Gateway)
+  - job_name: orquestador
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['ss-orquestador:8080']
+
+  # Micro Usuarios (Spring Boot)
+  - job_name: micro-usuarios
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['ss-micro-usuarios:8081']
+
+  # Micro Mascotas (Spring Boot)
+  - job_name: micro-mascotas
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['ss-micro-mascotas:8082']
+
+  # Micro Coincidencias (FastAPI)
+  - job_name: micro-coincidencias
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['ss-micro-coincidencias:8084']

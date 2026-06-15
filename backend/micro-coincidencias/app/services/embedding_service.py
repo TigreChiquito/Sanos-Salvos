@@ -71,7 +71,11 @@ class EmbeddingService:
         Retorna None si la imagen no está disponible o falla la descarga.
         """
         try:
-            response = requests.get(url_foto, timeout=10)
+            # Reemplaza la URL pública (localhost) por la URL interna de Docker
+            url_interna = url_foto.replace(
+                settings.minio_public_url, settings.minio_internal_url, 1
+            )
+            response = requests.get(url_interna, timeout=10)
             response.raise_for_status()
 
             imagen = Image.open(io.BytesIO(response.content)).convert("RGB")

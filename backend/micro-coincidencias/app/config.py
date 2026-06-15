@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     kafka_topic_reportes_updated: str = "ss.reportes.updated"
     kafka_topic_coincidencias: str = "ss.coincidencias.found"
 
+    # ── MinIO ─────────────────────────────────────────────────
+    # URL pública que viene en los eventos Kafka (usada por el browser)
+    minio_public_url: str = "http://localhost:9000"
+    # URL interna dentro de la red Docker para descargar imágenes
+    minio_internal_url: str = "http://localhost:9000"
+
     # ── Motor de Coincidencias ────────────────────────────────
     # Score mínimo para considerar un match válido
     match_threshold: float = 0.60

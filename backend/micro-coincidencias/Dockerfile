@@ -48,17 +48,23 @@ print('Modelo CLIP descargado')"
 # ── Copiar código fuente ────────────────────────────────────────
 COPY app ./app
 
+# Directorio para métricas Prometheus en modo multiprocess
+# (necesario cuando hay más de 1 worker gunicorn)
+RUN mkdir -p /tmp/prometheus_multiproc
+
 # Usuario no-root por seguridad
 RUN addgroup --system ssgroup && adduser --system --ingroup ssgroup ssuser \
-    && chown -R ssuser:ssgroup /app/.cache
+    && chown -R ssuser:ssgroup /app/.cache /tmp/prometheus_multiproc
 USER ssuser
+
+ENV PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc
 
 EXPOSE 8084
 
-# Gunicorn con workers Uvicorn para producción
-# En desarrollo puedes reemplazar por: uvicorn app.main:app --reload
+# 1 worker para desarrollo — evita el problema de fork-safety del registry de prometheus-client.
+# Para producción con múltiples workers, PROMETHEUS_MULTIPROC_DIR ya está configurado.
 CMD ["gunicorn", "app.main:app", \
-     "--workers", "2", \
+     "--workers", "1", \
      "--worker-class", "uvicorn.workers.UvicornWorker", \
      "--bind", "0.0.0.0:8084", \
      "--timeout", "120"]

@@ -18,6 +18,7 @@ from aiokafka import AIOKafkaConsumer
 from app.config import settings
 from app.database import SessionLocal
 from app.kafka.producer import publicar_coincidencia
+from app.metrics import KAFKA_EVENTOS
 from app.services import matching_service
 
 log = logging.getLogger(__name__)
@@ -65,6 +66,7 @@ async def _procesar_mensaje(payload: dict):
         return
 
     log.info("Evento recibido: %s para reporte %s", event_type, reporte_id)
+    KAFKA_EVENTOS.labels(tipo=event_type or "desconocido").inc()
 
     loop = asyncio.get_running_loop()
 

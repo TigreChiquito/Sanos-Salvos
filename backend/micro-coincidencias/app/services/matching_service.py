@@ -9,6 +9,7 @@ Flujo por cada nuevo reporte:
   5. Retornar lista de coincidencias encontradas para que el producer las publique
 """
 import logging
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
@@ -17,6 +18,10 @@ import numpy as np
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.metrics import (
+    COINCIDENCIA_SCORE, COINCIDENCIAS_ENCONTRADAS,
+    MATCHING_CANDIDATOS, MATCHING_DURACION, MATCHING_PROCESADOS,
+)
 from app.models.coincidencia import Coincidencia
 from app.models.reporte import Reporte
 from app.services.embedding_service import embedding_service
@@ -46,6 +51,8 @@ def procesar_reporte(
     Retorna la lista de coincidencias creadas/actualizadas.
     """
     log.info("Procesando matching para reporte %s (%s %s)", reporte_id, tipo, animal)
+    MATCHING_PROCESADOS.inc()
+    t0 = time.perf_counter()
 
     # 1. Generar embedding y persistirlo en PostgreSQL
     url_foto_principal = urls_fotos[0] if urls_fotos else None
@@ -68,6 +75,7 @@ def procesar_reporte(
     )
 
     log.info("Candidatos encontrados: %d", len(candidatos))
+    MATCHING_CANDIDATOS.observe(len(candidatos))
 
     # 3. Calcular scores y crear coincidencias
     coincidencias_creadas = []
@@ -106,12 +114,15 @@ def procesar_reporte(
                 db, reporte_id, str(candidato.id), tipo, scores
             )
             coincidencias_creadas.append(coincidencia)
+            COINCIDENCIAS_ENCONTRADAS.inc()
+            COINCIDENCIA_SCORE.observe(score_total)
             log.info(
                 "✅ Match encontrado: %s ↔ %s (score: %.4f)",
                 reporte_id, candidato.id, score_total
             )
 
     db.commit()
+    MATCHING_DURACION.observe(time.perf_counter() - t0)
     log.info("Matching completado — %d coincidencias generadas", len(coincidencias_creadas))
     return coincidencias_creadas
 

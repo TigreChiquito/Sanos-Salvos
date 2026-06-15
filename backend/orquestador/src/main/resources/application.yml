@@ -160,13 +160,18 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, circuitbreakers, circuitbreakerevents, metrics
+        include: health, info, circuitbreakers, circuitbreakerevents, metrics, prometheus
   endpoint:
     health:
       show-details: always
+    prometheus:
+      enabled: true
   health:
     circuitbreakers:
       enabled: true
+  metrics:
+    tags:
+      application: orquestador
 
 # ── Configuración propia ───────────────────────────────────────
 app:
@@ -178,7 +183,7 @@ app:
     allowed-origins: ${FRONTEND_URL:http://localhost:4321}
 
   # Rutas que NO requieren JWT (públicas) — comma-separated para compatibilidad con @Value
-  public-paths: /oauth2/**,/login/oauth2/**,/api/auth/logout,/fallback/**,/actuator/health,/swagger-ui/**,/api-docs/**
+  public-paths: /oauth2/**,/login/oauth2/**,/api/auth/logout,/fallback/**,/actuator/health,/actuator/prometheus,/actuator/metrics/**,/swagger-ui/**,/api-docs/**
 
 # ── Swagger ───────────────────────────────────────────────────
 springdoc:
