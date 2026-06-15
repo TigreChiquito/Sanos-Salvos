@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
     email           VARCHAR(255) UNIQUE  NOT NULL,
     google_id       VARCHAR(255) UNIQUE  NOT NULL,
     foto_perfil_url TEXT,
+    telefono        VARCHAR(20),
+    notif_email     BOOLEAN              NOT NULL DEFAULT TRUE,
+    notif_sistema   BOOLEAN              NOT NULL DEFAULT TRUE,
     activo          BOOLEAN              DEFAULT TRUE,
     created_at      TIMESTAMPTZ          DEFAULT NOW(),
     updated_at      TIMESTAMPTZ          DEFAULT NOW()

@@ -22,11 +22,13 @@ const { active } = Astro.props;
     <li data-auth="user"><a href="/reportar" class={`nav-cta${active === 'reportar' ? ' active' : ''}`}>Reportar ahora</a></li>
     <li data-auth="user" class="nav-avatar-wrap">
       <button class="nav-avatar" id="app-avatar-btn" aria-label="Menú de usuario" aria-expanded="false">
+        <img id="app-avatar-img" src="" alt="" class="nav-avatar-img" style="display:none" />
         <span id="app-initials">??</span>
       </button>
       <div class="nav-user-dropdown" id="app-user-dropdown">
         <span class="dropdown-name" id="app-user-name"></span>
         <hr class="dropdown-divider" />
+        <a class="dropdown-item" href="/perfil">Mi perfil</a>
         <button class="dropdown-logout" id="app-logout-btn">Cerrar sesión</button>
       </div>
     </li>
@@ -93,8 +95,10 @@ const { active } = Astro.props;
     color: white; font-weight: 800; font-size: .78rem;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     transition: border-color .2s, transform .15s;
+    overflow: hidden; padding: 0;
   }
   .nav-avatar:hover { border-color: rgba(255,255,255,.7); transform: scale(1.06); }
+  .nav-avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
   .nav-user-dropdown {
     display: none; flex-direction: column;
@@ -114,6 +118,14 @@ const { active } = Astro.props;
     border: none; border-top: 1px solid rgba(255,255,255,.08);
     margin: .4rem 0;
   }
+  .dropdown-item {
+    display: block; width: 100%; text-align: left;
+    background: none; border: none; cursor: pointer;
+    font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .85rem;
+    color: rgba(245,220,200,.85); padding: .45rem .6rem; border-radius: 8px;
+    text-decoration: none; transition: background .15s, color .15s;
+  }
+  .dropdown-item:hover { background: rgba(255,255,255,.07); color: #F5EAE0; }
   .dropdown-logout {
     width: 100%; text-align: left;
     background: none; border: none; cursor: pointer;
@@ -176,7 +188,7 @@ const { active } = Astro.props;
   });
 
   // ── Auth state ──
-  function applyAuth(user: { name: string; initials: string } | null) {
+  function applyAuth(user: { name: string; initials: string; fotoPerfilUrl?: string | null } | null) {
     const guestEls = document.querySelectorAll<HTMLElement>('[data-auth="guest"]');
     const userEls  = document.querySelectorAll<HTMLElement>('[data-auth="user"]');
     guestEls.forEach(el => { el.style.display = user ? 'none' : ''; });
@@ -185,8 +197,18 @@ const { active } = Astro.props;
     if (user) {
       const initEl = document.getElementById('app-initials');
       const nameEl = document.getElementById('app-user-name');
-      if (initEl) initEl.textContent = user.initials;
+      const imgEl  = document.getElementById('app-avatar-img') as HTMLImageElement | null;
       if (nameEl) nameEl.textContent = user.name;
+
+      if (imgEl && user.fotoPerfilUrl) {
+        imgEl.src = user.fotoPerfilUrl;
+        imgEl.alt = user.name;
+        imgEl.style.display = 'block';
+        if (initEl) initEl.style.display = 'none';
+      } else {
+        if (initEl) { initEl.textContent = user.initials; initEl.style.display = ''; }
+        if (imgEl)  imgEl.style.display = 'none';
+      }
     }
   }
 

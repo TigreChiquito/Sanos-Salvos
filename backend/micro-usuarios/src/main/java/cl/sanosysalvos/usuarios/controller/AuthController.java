@@ -1,5 +1,6 @@
 package cl.sanosysalvos.usuarios.controller;
 
+import cl.sanosysalvos.usuarios.dto.ActualizarPerfilDto;
 import cl.sanosysalvos.usuarios.dto.AuthResponseDto;
 import cl.sanosysalvos.usuarios.dto.UsuarioDto;
 import cl.sanosysalvos.usuarios.model.Usuario;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -87,6 +89,28 @@ public class AuthController {
         // Con JWT stateless no hay nada que invalidar en el servidor.
         // Para revocación real, implementar una blacklist en Redis (fase futura).
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Actualiza el perfil del usuario autenticado (teléfono + preferencias de notificación).
+     */
+    @PatchMapping("/api/usuarios/me")
+    @Operation(summary = "Actualizar perfil del usuario autenticado",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Perfil actualizado",
+                     content = @Content(schema = @Schema(implementation = UsuarioDto.class))),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content),
+        @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content)
+    })
+    public ResponseEntity<UsuarioDto> actualizarPerfil(
+            @AuthenticationPrincipal UUID userId,
+            @RequestBody @Valid ActualizarPerfilDto dto) {
+
+        return usuarioService.actualizarPerfil(userId, dto)
+                .map(u -> ResponseEntity.ok(UsuarioDto.from(u)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**

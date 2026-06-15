@@ -30,6 +30,15 @@ public class UsuarioDto {
     @Schema(description = "Iniciales para mostrar en el avatar", example = "JP")
     private String initials;
 
+    @Schema(description = "Teléfono de contacto", example = "+56 9 1234 5678")
+    private String telefono;
+
+    @Schema(description = "Recibir notificaciones por correo")
+    private Boolean notifEmail;
+
+    @Schema(description = "Recibir notificaciones del sistema")
+    private Boolean notifSistema;
+
     /** Convierte una entidad Usuario a DTO */
     public static UsuarioDto from(Usuario u) {
         return UsuarioDto.builder()
@@ -39,6 +48,9 @@ public class UsuarioDto {
                 .email(u.getEmail())
                 .fotoPerfilUrl(u.getFotoPerfilUrl())
                 .initials(u.getInitials())
+                .telefono(u.getTelefono())
+                .notifEmail(u.getNotifEmail() != null ? u.getNotifEmail() : true)
+                .notifSistema(u.getNotifSistema() != null ? u.getNotifSistema() : true)
                 .build();
     }
 }

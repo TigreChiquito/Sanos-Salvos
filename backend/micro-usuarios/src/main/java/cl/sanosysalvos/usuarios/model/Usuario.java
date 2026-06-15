@@ -36,6 +36,17 @@ public class Usuario {
     @Column(name = "foto_perfil_url")
     private String fotoPerfilUrl;
 
+    @Column(length = 20)
+    private String telefono;
+
+    @Builder.Default
+    @Column(name = "notif_email", nullable = false)
+    private Boolean notifEmail = true;
+
+    @Builder.Default
+    @Column(name = "notif_sistema", nullable = false)
+    private Boolean notifSistema = true;
+
     @Builder.Default
     private Boolean activo = true;
 

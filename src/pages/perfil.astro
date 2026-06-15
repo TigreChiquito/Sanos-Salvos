@@ -1,0 +1,343 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NavbarApp  from '../components/NavbarApp.astro';
+---
+
+<BaseLayout
+  title="Mi perfil — Sanos & Salvos"
+  description="Gestiona tu información de contacto y preferencias de notificación."
+>
+  <NavbarApp />
+
+  <div class="pf-page">
+
+    <!-- ── HEADER ── -->
+    <header class="pf-header">
+      <div class="pf-header-inner">
+        <div class="pf-avatar" id="pf-avatar">
+          <img id="pf-avatar-img" src="" alt="" class="pf-avatar-img" style="display:none" />
+          <span id="pf-avatar-initials"></span>
+        </div>
+        <div class="pf-header-text">
+          <h1 class="pf-name" id="pf-name">—</h1>
+          <p class="pf-email" id="pf-email">—</p>
+          <p class="pf-since" id="pf-since"></p>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── BODY ── -->
+    <div class="pf-body">
+
+      <!-- Información de contacto -->
+      <section class="pf-card">
+        <h2 class="pf-card-title">Información de contacto</h2>
+        <p class="pf-card-desc">
+          Tu teléfono puede ser visto por personas que encuentren tus reportes.
+        </p>
+
+        <div class="pf-field">
+          <label class="pf-label" for="pf-telefono">Teléfono</label>
+          <input
+            id="pf-telefono"
+            type="tel"
+            class="pf-input"
+            placeholder="+56 9 1234 5678"
+            maxlength="20"
+            autocomplete="tel"
+          />
+        </div>
+      </section>
+
+      <!-- Notificaciones -->
+      <section class="pf-card">
+        <h2 class="pf-card-title">Notificaciones</h2>
+        <p class="pf-card-desc">Elige cómo quieres recibir avisos sobre tus reportes.</p>
+
+        <div class="pf-toggle-row">
+          <div class="pf-toggle-info">
+            <span class="pf-toggle-label">Correo electrónico</span>
+            <span class="pf-toggle-hint">Alertas cuando tu reporte tiene una coincidencia</span>
+          </div>
+          <button class="pf-toggle" id="toggle-notif-email" role="switch" aria-checked="true">
+            <span class="pf-toggle-thumb"></span>
+          </button>
+        </div>
+
+        <div class="pf-toggle-row">
+          <div class="pf-toggle-info">
+            <span class="pf-toggle-label">Notificaciones del sistema</span>
+            <span class="pf-toggle-hint">Avisos dentro de la plataforma</span>
+          </div>
+          <button class="pf-toggle" id="toggle-notif-sistema" role="switch" aria-checked="true">
+            <span class="pf-toggle-thumb"></span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Acciones -->
+      <div class="pf-actions">
+        <button class="pf-save-btn" id="pf-save">Guardar cambios</button>
+        <span class="pf-save-hint" id="pf-hint"></span>
+      </div>
+
+    </div><!-- /pf-body -->
+
+  </div><!-- /pf-page -->
+
+</BaseLayout>
+
+<style>
+  /* ── Layout ── */
+  .pf-page {
+    min-height: 100vh;
+    background: #160A05;
+    padding-top: 62px;
+  }
+
+  /* ── Header ── */
+  .pf-header {
+    background: #1C0E07;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    padding: 2.5rem 2rem 2rem;
+  }
+  .pf-header-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .pf-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: #C45C3A;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.5rem; color: white;
+    border: 3px solid rgba(255,255,255,.15);
+    flex-shrink: 0; overflow: hidden;
+  }
+  .pf-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+  .pf-header-text { display: flex; flex-direction: column; gap: .25rem; }
+  .pf-name {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem; font-weight: 700;
+    color: #F5EAE0; margin: 0;
+  }
+  .pf-email {
+    font-size: .88rem; color: rgba(245,220,200,.5);
+    margin: 0;
+  }
+  .pf-since {
+    font-size: .8rem; color: rgba(245,220,200,.35);
+    margin: 0;
+  }
+
+  /* ── Body ── */
+  .pf-body {
+    max-width: 680px;
+    margin: 2rem auto;
+    padding: 0 1.5rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* ── Card ── */
+  .pf-card {
+    background: #1C0E07;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+  .pf-card-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem; font-weight: 700;
+    color: #F5EAE0; margin: 0 0 .35rem;
+  }
+  .pf-card-desc {
+    font-size: .83rem; color: rgba(245,220,200,.45);
+    margin: 0 0 1.25rem;
+    line-height: 1.5;
+  }
+
+  /* ── Field ── */
+  .pf-field { display: flex; flex-direction: column; gap: .5rem; }
+  .pf-label {
+    font-size: .82rem; font-weight: 700;
+    color: rgba(245,220,200,.6);
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+  .pf-input {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 10px;
+    color: #F5EAE0; font-family: 'Nunito', sans-serif;
+    font-size: .95rem; font-weight: 600;
+    padding: .7rem 1rem;
+    outline: none;
+    transition: border-color .2s, background .2s;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .pf-input::placeholder { color: rgba(245,220,200,.25); }
+  .pf-input:focus {
+    border-color: #C45C3A;
+    background: rgba(255,255,255,.07);
+  }
+
+  /* ── Toggle row ── */
+  .pf-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .9rem 0;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .pf-toggle-row:last-child { border-bottom: none; }
+  .pf-toggle-info { display: flex; flex-direction: column; gap: .2rem; }
+  .pf-toggle-label { font-size: .9rem; font-weight: 700; color: #F5EAE0; }
+  .pf-toggle-hint  { font-size: .78rem; color: rgba(245,220,200,.4); }
+
+  /* Toggle button */
+  .pf-toggle {
+    width: 46px; height: 26px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.12);
+    border: none; cursor: pointer;
+    position: relative; flex-shrink: 0;
+    transition: background .25s;
+  }
+  .pf-toggle[aria-checked="true"]  { background: #C45C3A; }
+  .pf-toggle[aria-checked="false"] { background: rgba(255,255,255,.12); }
+  .pf-toggle-thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 20px; height: 20px;
+    background: white; border-radius: 50%;
+    transition: transform .25s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.35);
+  }
+  .pf-toggle[aria-checked="true"] .pf-toggle-thumb {
+    transform: translateX(20px);
+  }
+
+  /* ── Actions ── */
+  .pf-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .pf-save-btn {
+    background: #C45C3A;
+    color: white;
+    border: none; border-radius: 10px;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: .95rem;
+    padding: .75rem 2rem;
+    cursor: pointer;
+    transition: background .2s, opacity .2s;
+  }
+  .pf-save-btn:hover  { background: #9E4026; }
+  .pf-save-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .pf-save-hint {
+    font-size: .85rem; font-weight: 600;
+    transition: opacity .3s;
+  }
+  .pf-save-hint.ok     { color: #7fcf9a; }
+  .pf-save-hint.err    { color: #e87070; }
+  .pf-save-hint.hidden { opacity: 0; }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .pf-header { padding: 2rem 1.25rem 1.5rem; }
+    .pf-header-inner { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .pf-body { padding: 0 1rem 4rem; }
+  }
+</style>
+
+<script>
+  import { getSession, getToken, refreshSession } from '../lib/auth';
+  import { apiFetch } from '../lib/api';
+
+  // ── Guard: redirigir si no hay sesión ─────────────────────────
+  const session = getSession();
+  if (!session) {
+    window.location.replace('/acceder');
+    throw new Error('no session');
+  }
+
+  // ── Poblar cabecera ────────────────────────────────────────────
+  const nameEl     = document.getElementById('pf-name');
+  const emailEl    = document.getElementById('pf-email');
+  const initialsEl = document.getElementById('pf-avatar-initials');
+  const imgEl      = document.getElementById('pf-avatar-img') as HTMLImageElement | null;
+
+  if (nameEl)     nameEl.textContent     = session.name;
+  if (emailEl)    emailEl.textContent    = session.email;
+  if (initialsEl) initialsEl.textContent = session.initials;
+
+  if (imgEl && session.fotoPerfilUrl) {
+    imgEl.src = session.fotoPerfilUrl;
+    imgEl.alt = session.name;
+    imgEl.style.display = 'block';
+    if (initialsEl) (initialsEl as HTMLElement).style.display = 'none';
+  }
+
+  // ── Poblar campos de contacto ──────────────────────────────────
+  const telefonoInput = document.getElementById('pf-telefono') as HTMLInputElement | null;
+  if (telefonoInput && session.telefono) telefonoInput.value = session.telefono;
+
+  // ── Toggles de notificaciones ──────────────────────────────────
+  const toggleEmail   = document.getElementById('toggle-notif-email');
+  const toggleSistema = document.getElementById('toggle-notif-sistema');
+
+  function setToggle(btn: Element | null, value: boolean) {
+    btn?.setAttribute('aria-checked', String(value));
+  }
+
+  setToggle(toggleEmail,   session.notifEmail   ?? true);
+  setToggle(toggleSistema, session.notifSistema ?? true);
+
+  [toggleEmail, toggleSistema].forEach(btn => {
+    btn?.addEventListener('click', () => {
+      const current = btn.getAttribute('aria-checked') === 'true';
+      setToggle(btn, !current);
+    });
+  });
+
+  // ── Guardar ────────────────────────────────────────────────────
+  const saveBtn  = document.getElementById('pf-save') as HTMLButtonElement | null;
+  const hintEl   = document.getElementById('pf-hint');
+
+  function showHint(msg: string, type: 'ok' | 'err') {
+    if (!hintEl) return;
+    hintEl.textContent = msg;
+    hintEl.className   = `pf-save-hint ${type}`;
+    setTimeout(() => { hintEl.className = 'pf-save-hint hidden'; }, 3500);
+  }
+
+  saveBtn?.addEventListener('click', async () => {
+    if (!saveBtn) return;
+    saveBtn.disabled = true;
+
+    const payload = {
+      telefono:     telefonoInput?.value.trim() || '',
+      notifEmail:   toggleEmail?.getAttribute('aria-checked')   === 'true',
+      notifSistema: toggleSistema?.getAttribute('aria-checked') === 'true',
+    };
+
+    try {
+      await apiFetch('/api/usuarios/me', {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+      // Refrescar sesión local con nuevos datos
+      await refreshSession();
+      showHint('Cambios guardados', 'ok');
+    } catch (err: any) {
+      showHint(err?.message ?? 'Error al guardar', 'err');
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+</script>

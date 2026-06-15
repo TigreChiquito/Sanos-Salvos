@@ -25,11 +25,13 @@
         aria-label="Menú de usuario"
         aria-expanded="false"
       >
+        <img id="nav-avatar-img" src="" alt="" class="nav-avatar-img" style="display:none" />
         <span id="nav-initials">??</span>
       </button>
       <div class="nav-user-dropdown" id="nav-user-dropdown">
         <span class="dropdown-name" id="nav-user-name"></span>
         <hr class="dropdown-divider" />
+        <a class="dropdown-item" href="/perfil">Mi perfil</a>
         <button class="dropdown-logout" id="nav-logout-btn"
           >Cerrar sesión</button
         >
@@ -167,11 +169,14 @@
     transition:
       border-color 0.2s,
       transform 0.15s;
+    overflow: hidden;
+    padding: 0;
   }
   .nav-avatar:hover {
     border-color: white;
     transform: scale(1.06);
   }
+  .nav-avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
   .nav-user-dropdown {
     display: none;
@@ -201,6 +206,23 @@
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     margin: 0.4rem 0;
   }
+  .dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: "Nunito", sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: rgba(245, 220, 200, 0.85);
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .dropdown-item:hover { background: rgba(255,255,255,.07); color: #F5EAE0; }
   .dropdown-logout {
     width: 100%;
     text-align: left;
@@ -324,24 +346,27 @@
   });
 
   // ── Auth state ──
-  function applyAuth(user: { name: string; initials: string } | null) {
-    const guestEls = document.querySelectorAll<HTMLElement>(
-      '[data-auth="guest"]',
-    );
-    const userEls =
-      document.querySelectorAll<HTMLElement>('[data-auth="user"]');
-    guestEls.forEach((el) => {
-      el.style.display = user ? "none" : "";
-    });
-    userEls.forEach((el) => {
-      el.style.display = user ? "" : "none";
-    });
+  function applyAuth(user: { name: string; initials: string; fotoPerfilUrl?: string | null } | null) {
+    const guestEls = document.querySelectorAll<HTMLElement>('[data-auth="guest"]');
+    const userEls  = document.querySelectorAll<HTMLElement>('[data-auth="user"]');
+    guestEls.forEach((el) => { el.style.display = user ? "none" : ""; });
+    userEls.forEach((el)  => { el.style.display = user ? "" : "none"; });
 
     if (user) {
       const initEl = document.getElementById("nav-initials");
       const nameEl = document.getElementById("nav-user-name");
-      if (initEl) initEl.textContent = user.initials;
+      const imgEl  = document.getElementById("nav-avatar-img") as HTMLImageElement | null;
       if (nameEl) nameEl.textContent = user.name;
+
+      if (imgEl && user.fotoPerfilUrl) {
+        imgEl.src = user.fotoPerfilUrl;
+        imgEl.alt = user.name;
+        imgEl.style.display = "block";
+        if (initEl) initEl.style.display = "none";
+      } else {
+        if (initEl) { initEl.textContent = user.initials; initEl.style.display = ""; }
+        if (imgEl)  imgEl.style.display = "none";
+      }
     }
   }
 

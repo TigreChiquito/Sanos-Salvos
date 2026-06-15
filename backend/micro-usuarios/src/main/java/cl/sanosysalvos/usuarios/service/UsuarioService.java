@@ -1,5 +1,6 @@
 package cl.sanosysalvos.usuarios.service;
 
+import cl.sanosysalvos.usuarios.dto.ActualizarPerfilDto;
 import cl.sanosysalvos.usuarios.kafka.UsuarioEventProducer;
 import cl.sanosysalvos.usuarios.model.Usuario;
 import cl.sanosysalvos.usuarios.repository.UsuarioRepository;
@@ -42,6 +43,19 @@ public class UsuarioService {
     @Transactional(readOnly = true)
     public Optional<Usuario> findById(UUID id) {
         return usuarioRepository.findById(id);
+    }
+
+    /** Actualiza teléfono y preferencias de notificación del usuario */
+    @Transactional
+    public Optional<Usuario> actualizarPerfil(UUID id, ActualizarPerfilDto dto) {
+        return usuarioRepository.findById(id).map(u -> {
+            if (dto.getTelefono() != null) {
+                u.setTelefono(dto.getTelefono().isBlank() ? null : dto.getTelefono().trim());
+            }
+            if (dto.getNotifEmail() != null) u.setNotifEmail(dto.getNotifEmail());
+            if (dto.getNotifSistema() != null) u.setNotifSistema(dto.getNotifSistema());
+            return usuarioRepository.save(u);
+        });
     }
 
     // ── Privado ────────────────────────────────────────────────

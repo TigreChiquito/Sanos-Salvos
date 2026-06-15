@@ -25,15 +25,30 @@ export interface User {
   email: string;
   fotoPerfilUrl: string | null;
   initials: string;
+  telefono?: string | null;
+  notifEmail?: boolean;
+  notifSistema?: boolean;
 }
 
-/** Respuesta que devuelve GET /api/auth/me */
-interface MeResponse {
+/** Estructura del usuario dentro de AuthResponseDto */
+interface UsuarioDto {
   id: string;
   nombre: string;
   apellido: string;
   email: string;
   fotoPerfilUrl: string | null;
+  initials: string;
+  telefono?: string | null;
+  notifEmail?: boolean;
+  notifSistema?: boolean;
+}
+
+/** Respuesta que devuelve GET /api/auth/me — es un AuthResponseDto con el usuario anidado */
+interface MeResponse {
+  token: string;
+  tokenType: string;
+  expiresIn: number;
+  usuario: UsuarioDto;
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -78,15 +93,19 @@ export async function login(token: string): Promise<User> {
   try {
     // 2. Obtener datos del usuario desde el backend
     const me = await apiFetch<MeResponse>('/api/auth/me');
-    const fullName = `${me.nombre} ${me.apellido}`.trim();
+    const u = me.usuario;
+    const fullName = `${u.nombre} ${u.apellido}`.trim();
     const user: User = {
-      id:            me.id,
-      nombre:        me.nombre,
-      apellido:      me.apellido,
+      id:            String(u.id),
+      nombre:        u.nombre,
+      apellido:      u.apellido,
       name:          fullName,
-      email:         me.email,
-      fotoPerfilUrl: me.fotoPerfilUrl,
-      initials:      toInitials(fullName),
+      email:         u.email,
+      fotoPerfilUrl: u.fotoPerfilUrl,
+      initials:      u.initials || toInitials(fullName),
+      telefono:      u.telefono ?? null,
+      notifEmail:    u.notifEmail ?? true,
+      notifSistema:  u.notifSistema ?? true,
     };
 
     // 3. Cachear usuario
@@ -134,15 +153,19 @@ export async function refreshSession(): Promise<User | null> {
 
   try {
     const me = await apiFetch<MeResponse>('/api/auth/me');
-    const fullName = `${me.nombre} ${me.apellido}`.trim();
+    const u = me.usuario;
+    const fullName = `${u.nombre} ${u.apellido}`.trim();
     const user: User = {
-      id:            me.id,
-      nombre:        me.nombre,
-      apellido:      me.apellido,
+      id:            String(u.id),
+      nombre:        u.nombre,
+      apellido:      u.apellido,
       name:          fullName,
-      email:         me.email,
-      fotoPerfilUrl: me.fotoPerfilUrl,
-      initials:      toInitials(fullName),
+      email:         u.email,
+      fotoPerfilUrl: u.fotoPerfilUrl,
+      initials:      u.initials || toInitials(fullName),
+      telefono:      u.telefono ?? null,
+      notifEmail:    u.notifEmail ?? true,
+      notifSistema:  u.notifSistema ?? true,
     };
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: user }));
