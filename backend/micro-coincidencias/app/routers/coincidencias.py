@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db, SessionLocal
 from app.kafka.producer import publicar_coincidencia
 from app.models.coincidencia import Coincidencia
+from app.models.foto import Foto
 from app.models.reporte import Reporte
 from app.schemas.coincidencia import CoincidenciaOut, CoincidenciaEstadoUpdate
 from app.services import matching_service
@@ -29,6 +30,17 @@ _executor = ThreadPoolExecutor(max_workers=2)
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────
+
+def _fotos_de_reporte(db: Session, reporte_id) -> list[str]:
+    """Devuelve las URLs de fotos ordenadas por `orden` ASC."""
+    return [
+        f.url for f in
+        db.query(Foto)
+        .filter(Foto.reporte_id == reporte_id)
+        .order_by(Foto.orden.asc())
+        .all()
+    ]
+
 
 def _run_matching_sync(reporte: Reporte) -> list[dict]:
     """Ejecuta el matching de un reporte en un hilo separado. Retorna dicts puros."""
@@ -117,6 +129,7 @@ async def recalcular(
         "descripcion": reporte.descripcion,
         "lat":         float(reporte.lat),
         "lng":         float(reporte.lng),
+        "urls_fotos":  _fotos_de_reporte(db, reporte.id),
     }
 
     async def _task():
@@ -135,11 +148,13 @@ async def recalcular(
 @router.post("/reanalizar-todos", status_code=202)
 async def reanalizar_todos(background_tasks: BackgroundTasks):
     """
-    Re-analiza TODOS los reportes activos en busca de coincidencias.
-    Útil después de ajustar pesos o al arrancar con reportes pre-existentes.
-    Retorna inmediatamente; el trabajo ocurre en background.
+    Re-analiza TODOS los reportes activos en dos fases:
+      Fase 1 — Genera y persiste embeddings (texto + imagen + combinado) para cada reporte.
+      Fase 2 — Ejecuta el matching ya con todos los embeddings disponibles.
+
+    La separación en fases garantiza que cuando se calcula el score A↔B,
+    ambos extremos tienen sus embeddings completos en la DB.
     """
-    # Leer los reportes en la sesión de la request y serializar a dicts
     db = SessionLocal()
     try:
         reportes = (
@@ -160,6 +175,7 @@ async def reanalizar_todos(background_tasks: BackgroundTasks):
                 "descripcion": r.descripcion,
                 "lat":         float(r.lat),
                 "lng":         float(r.lng),
+                "urls_fotos":  _fotos_de_reporte(db, r.id),
             }
             for r in reportes
         ]
@@ -171,17 +187,29 @@ async def reanalizar_todos(background_tasks: BackgroundTasks):
 
     async def _task():
         loop = asyncio.get_running_loop()
+
+        # ── Fase 1: generar y guardar todos los embeddings ────────────────
+        log.info("Fase 1/2 — Generando embeddings para %d reportes", total)
+        for snap in snapshots:
+            await loop.run_in_executor(
+                _executor,
+                lambda s=snap: _solo_embeddings_sync(s),
+            )
+        log.info("Fase 1/2 — Embeddings generados")
+
+        # ── Fase 2: matching con todos los embeddings disponibles ─────────
+        log.info("Fase 2/2 — Ejecutando matching")
         matches_total = 0
         for snap in snapshots:
             items = await loop.run_in_executor(
                 _executor,
-                lambda s=snap: _run_matching_sync_from_dict(s),
+                lambda s=snap: _solo_matching_sync(s),
             )
             await _publicar_items(items, snap["id"])
             matches_total += len(items)
 
         log.info(
-            "Re-análisis total completado — %d reportes procesados, %d coincidencias generadas",
+            "Re-análisis total completado — %d reportes, %d coincidencias",
             total, matches_total,
         )
 
@@ -232,7 +260,58 @@ def _run_matching_sync_from_dict(snap: dict) -> list[dict]:
             descripcion=snap["descripcion"],
             lat=snap["lat"],
             lng=snap["lng"],
-            urls_fotos=[],
+            urls_fotos=snap.get("urls_fotos", []),
+        )
+    except Exception as e:
+        log.error("Error en matching para reporte %s: %s", snap["id"], e, exc_info=True)
+        return []
+    finally:
+        db.close()
+
+
+def _solo_embeddings_sync(snap: dict) -> None:
+    """Fase 1: solo genera y persiste los embeddings sin ejecutar el matching."""
+    from app.services.embedding_service import embedding_service
+    from app.services.matching_service import _guardar_embedding
+    import uuid as _uuid
+
+    db = SessionLocal()
+    try:
+        url_foto = snap.get("urls_fotos", [])
+        url_foto = url_foto[0] if url_foto else None
+        emb_texto, emb_imagen, emb_combinado = embedding_service.generar_todos_embeddings(
+            nombre=snap["nombre"],
+            raza=snap["raza"],
+            color=snap["color"],
+            descripcion=snap["descripcion"],
+            url_foto=url_foto,
+        )
+        _guardar_embedding(db, snap["id"], emb_texto, emb_imagen, emb_combinado)
+        db.commit()
+    except Exception as e:
+        log.error("Error generando embeddings para reporte %s: %s", snap["id"], e, exc_info=True)
+        db.rollback()
+    finally:
+        db.close()
+
+
+def _solo_matching_sync(snap: dict) -> list[dict]:
+    """Fase 2: ejecuta el matching asumiendo que todos los embeddings ya están en DB."""
+    db = SessionLocal()
+    try:
+        return matching_service.solo_matching(
+            db=db,
+            reporte_id=snap["id"],
+            usuario_id=snap["usuario_id"],
+            tipo=snap["tipo"],
+            animal=snap["animal"],
+            nombre=snap["nombre"],
+            raza=snap["raza"],
+            color=snap["color"],
+            tamano=snap["tamano"],
+            descripcion=snap["descripcion"],
+            lat=snap["lat"],
+            lng=snap["lng"],
         )
     except Exception as e:
         log.error("Error en matching para reporte %s: %s", snap["id"], e, exc_info=True)

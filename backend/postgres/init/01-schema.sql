@@ -59,9 +59,10 @@ CREATE TABLE IF NOT EXISTS reportes (
     lng         DECIMAL(11, 8) NOT NULL,
     zona        VARCHAR(255),  -- texto derivado de geocodificación inversa
 
-    -- Embedding vectorial para el Motor de Coincidencias
-    -- Dimensión 512: compatible con CLIP ViT-B/32 y sentence-transformers
-    embedding   vector(512),
+    -- Embeddings vectoriales para el Motor de Coincidencias
+    embedding         vector(512),   -- combinado (texto 60% + imagen 40%), para búsqueda ANN
+    embedding_texto   vector(768),   -- sentence-transformers puro, para score_descripcion
+    embedding_imagen  vector(512),   -- CLIP puro, para score_imagen
 
     -- Relación con usuario
     usuario_id  UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -149,9 +150,14 @@ CREATE INDEX IF NOT EXISTS idx_reportes_ubicacion  ON reportes(lat, lng);
 CREATE INDEX IF NOT EXISTS idx_reportes_created    ON reportes(created_at DESC);
 
 -- Reportes: búsqueda vectorial del Motor de Coincidencias
--- ivfflat: eficiente para datasets medianos; ajustar lists según volumen
 CREATE INDEX IF NOT EXISTS idx_reportes_embedding
     ON reportes USING ivfflat (embedding vector_cosine_ops)
+    WITH (lists = 100);
+CREATE INDEX IF NOT EXISTS idx_reportes_embedding_texto
+    ON reportes USING ivfflat (embedding_texto vector_cosine_ops)
+    WITH (lists = 100);
+CREATE INDEX IF NOT EXISTS idx_reportes_embedding_imagen
+    ON reportes USING ivfflat (embedding_imagen vector_cosine_ops)
     WITH (lists = 100);
 
 -- Fotos

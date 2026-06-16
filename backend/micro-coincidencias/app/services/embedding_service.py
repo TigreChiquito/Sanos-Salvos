@@ -91,6 +91,41 @@ class EmbeddingService:
             log.warning("No se pudo generar embedding de imagen desde %s: %s", url_foto, e)
             return None
 
+    def generar_todos_embeddings(
+        self,
+        nombre: Optional[str],
+        raza: Optional[str],
+        color: Optional[str],
+        descripcion: Optional[str],
+        url_foto: Optional[str],
+    ) -> tuple[np.ndarray, Optional[np.ndarray], np.ndarray]:
+        """
+        Genera los tres vectores necesarios para el motor de coincidencias:
+
+        Returns:
+            emb_texto (768-dim):     sentence-transformers nativo → score_descripcion
+            emb_imagen (512-dim):    CLIP ViT-B/32 puro          → score_imagen (None si no hay foto)
+            emb_combinado (512-dim): texto(60%) + imagen(40%)    → columna `embedding` (búsqueda ANN)
+        """
+        partes = [p for p in [nombre, raza, color, descripcion] if p]
+        texto = " ".join(partes) if partes else "mascota"
+
+        # Texto nativo: 768-dim (paraphrase-multilingual-mpnet-base-v2)
+        emb_texto = self.texto_model.encode(texto, normalize_embeddings=True).astype(np.float32)
+
+        # Imagen pura: 512-dim CLIP
+        emb_imagen = self.generar_imagen_embedding(url_foto) if url_foto else None
+
+        # Combinado: mezcla ponderada truncando texto a 512 para igualar dimensiones
+        emb_texto_512 = self._ajustar_dimension(emb_texto, 512)
+        if emb_imagen is not None:
+            combinado = 0.6 * emb_texto_512 + 0.4 * emb_imagen
+        else:
+            combinado = emb_texto_512
+        emb_combinado = normalize(combinado.reshape(1, -1)).flatten().astype(np.float32)
+
+        return emb_texto, emb_imagen, emb_combinado
+
     def generar_embedding_combinado(
         self,
         nombre: Optional[str],
@@ -99,31 +134,9 @@ class EmbeddingService:
         descripcion: Optional[str],
         url_foto: Optional[str],
     ) -> np.ndarray:
-        """
-        Combina embeddings de texto e imagen en un único vector de 512 dims.
-
-        Pesos de la combinación:
-          - Texto: 60% (nombre + raza + color + descripción concatenados)
-          - Imagen: 40% (primera foto del reporte)
-
-        Si no hay imagen disponible, el texto ocupa el 100%.
-        El vector resultante se normaliza a norma 1 (cosine similarity ready).
-        """
-        # Construir texto descriptivo del reporte
-        partes = [p for p in [nombre, raza, color, descripcion] if p]
-        texto = " ".join(partes) if partes else "mascota"
-
-        emb_texto = self.generar_texto_embedding(texto)   # (512,)
-        emb_imagen = self.generar_imagen_embedding(url_foto) if url_foto else None
-
-        if emb_imagen is not None:
-            combinado = 0.6 * emb_texto + 0.4 * emb_imagen
-        else:
-            combinado = emb_texto
-
-        # Normalizar a norma unitaria para que cosine_similarity funcione correctamente
-        combinado = normalize(combinado.reshape(1, -1)).flatten()
-        return combinado.astype(np.float32)
+        """Compatibilidad: devuelve solo el vector combinado de 512 dims."""
+        _, _, combinado = self.generar_todos_embeddings(nombre, raza, color, descripcion, url_foto)
+        return combinado
 
     # ── Privado ────────────────────────────────────────────────
 

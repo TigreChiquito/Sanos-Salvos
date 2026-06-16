@@ -47,7 +47,8 @@ def calcular_scores(
     descripcion_a: Optional[str],
     lat_a: float,
     lng_a: float,
-    embedding_a: Optional[np.ndarray],
+    embedding_texto_a: Optional[np.ndarray],
+    embedding_imagen_a: Optional[np.ndarray],
     # Reporte B (ej: encontrado)
     nombre_b: Optional[str],
     raza_b: Optional[str],
@@ -56,11 +57,15 @@ def calcular_scores(
     descripcion_b: Optional[str],
     lat_b: float,
     lng_b: float,
-    embedding_b: Optional[np.ndarray],
+    embedding_texto_b: Optional[np.ndarray],
+    embedding_imagen_b: Optional[np.ndarray],
 ) -> dict:
     """
     Calcula los scores individuales por dimensión entre dos reportes.
     Retorna un dict con claves de PESOS + 'total'.
+
+    embedding_texto_*: vector 768-dim de sentence-transformers → score_descripcion
+    embedding_imagen_*: vector 512-dim de CLIP puro            → score_imagen
     """
     scores: dict[str, Optional[float]] = {}
 
@@ -70,7 +75,7 @@ def calcular_scores(
             fuzz.token_sort_ratio(nombre_a.lower(), nombre_b.lower()) / 100.0, 4
         )
     else:
-        scores["nombre"] = None  # No penalizar si falta el nombre
+        scores["nombre"] = None
 
     # ── Raza ──────────────────────────────────────────────────
     if raza_a and raza_b:
@@ -94,12 +99,11 @@ def calcular_scores(
     else:
         scores["tamano"] = None
 
-    # ── Descripción (coseno entre embeddings de texto) ────────
-    # Los embeddings ya incluyen la descripción; se comparan directamente
-    if embedding_a is not None and embedding_b is not None:
+    # ── Descripción (coseno entre embeddings de TEXTO puro, 768-dim) ─
+    if embedding_texto_a is not None and embedding_texto_b is not None:
         sim = cosine_similarity(
-            embedding_a.reshape(1, -1),
-            embedding_b.reshape(1, -1)
+            embedding_texto_a.reshape(1, -1),
+            embedding_texto_b.reshape(1, -1)
         )[0][0]
         scores["descripcion"] = round(float(sim), 4)
     else:
@@ -108,12 +112,12 @@ def calcular_scores(
     # ── Ubicación ─────────────────────────────────────────────
     scores["ubicacion"] = geo_score(lat_a, lng_a, lat_b, lng_b, settings.max_distancia_km)
 
-    # ── Imagen (coseno del embedding combinado texto+imagen) ──
-    # Reutiliza el mismo embedding combinado; ya incorpora la imagen
-    if embedding_a is not None and embedding_b is not None:
+    # ── Imagen (coseno entre embeddings CLIP puros, 512-dim) ──
+    # Solo disponible cuando ambos reportes tienen foto procesada
+    if embedding_imagen_a is not None and embedding_imagen_b is not None:
         sim = cosine_similarity(
-            embedding_a.reshape(1, -1),
-            embedding_b.reshape(1, -1)
+            embedding_imagen_a.reshape(1, -1),
+            embedding_imagen_b.reshape(1, -1)
         )[0][0]
         scores["imagen"] = round(float(sim), 4)
     else:

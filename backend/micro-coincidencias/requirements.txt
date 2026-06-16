@@ -23,7 +23,7 @@ sentence-transformers==3.1.1   # embeddings de texto en español
 
 # ── ML: Imágenes ─────────────────────────────────────────────
 # CLIP de OpenAI para embeddings visuales (ViT-B/32, ~340MB)
-git+https://github.com/openai/CLIP.git
+https://github.com/openai/CLIP/archive/refs/heads/main.zip
 
 # PyTorch CPU-only (evitar imagen Docker con CUDA de ~4GB)
 # Se instala via URL en el Dockerfile para mayor control de versión

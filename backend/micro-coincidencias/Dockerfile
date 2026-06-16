@@ -6,14 +6,7 @@
 #  contenedor arranque sin necesidad de acceso a internet.
 # =============================================================
 
-FROM python:3.11-slim AS base
-
-# Dependencias del sistema para Pillow, psycopg2 y compilación
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.11-slim-bookworm AS base
 
 WORKDIR /app
 

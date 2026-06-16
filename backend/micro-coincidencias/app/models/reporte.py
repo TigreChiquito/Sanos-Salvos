@@ -26,9 +26,9 @@ class Reporte(Base):
     zona        = Column(String(255))
     usuario_id  = Column(UUID(as_uuid=True), nullable=False)
 
-    # Vector de 512 dimensiones — gestionado exclusivamente por este micro
-    # Compatible con CLIP ViT-B/32 y paraphrase-multilingual-mpnet-base-v2
-    embedding   = Column(Vector(512))
+    embedding         = Column(Vector(512))   # combinado (texto 60% + imagen 40%)
+    embedding_texto   = Column(Vector(768))   # sentence-transformers puro → score_descripcion
+    embedding_imagen  = Column(Vector(512))   # CLIP puro                 → score_imagen
 
     created_at  = Column(TIMESTAMP(timezone=True))
     updated_at  = Column(TIMESTAMP(timezone=True))
