@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("GET", "/api/reportes").permitAll()
                 .requestMatchers("GET", "/api/reportes/{id}").permitAll()
                 .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
-                .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/prometheus", "/actuator/metrics/**").permitAll()
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex

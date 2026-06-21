@@ -4,6 +4,12 @@ import cl.sanosysalvos.mascotas.dto.ReporteRequestDto;
 import cl.sanosysalvos.mascotas.dto.ReporteResponseDto;
 import cl.sanosysalvos.mascotas.service.ReporteService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -47,12 +53,22 @@ public class ReporteController {
      */
     @GetMapping
     @Operation(summary = "Listar reportes activos")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de reportes",
+                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReporteResponseDto.class))))
+    })
     public ResponseEntity<List<ReporteResponseDto>> listar(
+            @Parameter(description = "Tipo de reporte: 'perdido' o 'encontrado'")
             @RequestParam(required = false) String tipo,
+            @Parameter(description = "Tipo de animal: 'perro', 'gato' u 'otro'")
             @RequestParam(required = false) String animal,
+            @Parameter(description = "Latitud mínima del área del mapa")
             @RequestParam(required = false) Double latMin,
+            @Parameter(description = "Latitud máxima del área del mapa")
             @RequestParam(required = false) Double latMax,
+            @Parameter(description = "Longitud mínima del área del mapa")
             @RequestParam(required = false) Double lngMin,
+            @Parameter(description = "Longitud máxima del área del mapa")
             @RequestParam(required = false) Double lngMax) {
 
         List<ReporteResponseDto> reportes =
@@ -65,7 +81,13 @@ public class ReporteController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "Detalle de un reporte")
-    public ResponseEntity<ReporteResponseDto> obtener(@PathVariable UUID id) {
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Reporte encontrado",
+                     content = @Content(schema = @Schema(implementation = ReporteResponseDto.class))),
+        @ApiResponse(responseCode = "404", description = "Reporte no encontrado", content = @Content)
+    })
+    public ResponseEntity<ReporteResponseDto> obtener(
+            @Parameter(description = "UUID del reporte") @PathVariable UUID id) {
         return reporteService.obtener(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -79,9 +101,17 @@ public class ReporteController {
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Crear reporte",
+               description = "Request multipart/form-data: campo 'datos' con el JSON del reporte y campo 'fotos' con hasta 5 imágenes.",
                security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Reporte creado",
+                     content = @Content(schema = @Schema(implementation = ReporteResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos o más de 5 fotos", content = @Content),
+        @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
+    })
     public ResponseEntity<ReporteResponseDto> crear(
             @RequestPart("datos") @Valid ReporteRequestDto dto,
+            @Parameter(description = "Hasta 5 imágenes de la mascota")
             @RequestPart(value = "fotos", required = false) List<MultipartFile> fotos,
             @AuthenticationPrincipal UUID usuarioId) {
 
@@ -101,8 +131,19 @@ public class ReporteController {
     @PatchMapping("/{id}/estado")
     @Operation(summary = "Actualizar estado del reporte",
                security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Estado actualizado",
+                     content = @Content(schema = @Schema(implementation = ReporteResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "Estado inválido", content = @Content),
+        @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content),
+        @ApiResponse(responseCode = "403", description = "No autorizado — solo el autor puede modificarlo", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Reporte no encontrado", content = @Content)
+    })
     public ResponseEntity<ReporteResponseDto> actualizarEstado(
-            @PathVariable UUID id,
+            @Parameter(description = "UUID del reporte") @PathVariable UUID id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                description = "Nuevo estado: 'activo' o 'resuelto'",
+                content = @Content(schema = @Schema(example = "{\"estado\": \"resuelto\"}")))
             @RequestBody Map<String, String> body,
             @AuthenticationPrincipal UUID usuarioId) {
 
@@ -127,8 +168,14 @@ public class ReporteController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar reporte",
                security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Reporte eliminado", content = @Content),
+        @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content),
+        @ApiResponse(responseCode = "403", description = "No autorizado — solo el autor puede eliminarlo", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Reporte no encontrado", content = @Content)
+    })
     public ResponseEntity<Void> eliminar(
-            @PathVariable UUID id,
+            @Parameter(description = "UUID del reporte") @PathVariable UUID id,
             @AuthenticationPrincipal UUID usuarioId) {
 
         try {

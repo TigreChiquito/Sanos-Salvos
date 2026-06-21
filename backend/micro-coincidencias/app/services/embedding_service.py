@@ -58,34 +58,53 @@ class EmbeddingService:
 
     def generar_texto_embedding(self, texto: str) -> np.ndarray:
         """
-        Genera un embedding de 512 dimensiones para el texto dado.
-        Si el modelo genera una dimensión distinta, se hace padding/truncado.
+        Genera embedding de texto en dimensión nativa del modelo (768D para
+        paraphrase-multilingual-mpnet-base-v2). No truncar — la BD almacena
+        vector(768) en embedding_texto.
         """
-        emb = self.texto_model.encode(texto, normalize_embeddings=True)
-        return self._ajustar_dimension(emb, 512)
+        return self.texto_model.encode(texto, normalize_embeddings=True)
 
     def generar_imagen_embedding(self, url_foto: str) -> Optional[np.ndarray]:
         """
-        Descarga la imagen desde la URL (MinIO presignada) y genera un
-        embedding CLIP de 512 dimensiones.
-        Retorna None si la imagen no está disponible o falla la descarga.
+        Descarga la imagen desde MinIO y genera embedding CLIP de 512 dimensiones.
+        Realiza 2 intentos ante fallos transitorios.
+        Retorna None si la imagen no está disponible tras los reintentos.
         """
-        try:
-            response = requests.get(url_foto, timeout=10)
-            response.raise_for_status()
-
-            imagen = Image.open(io.BytesIO(response.content)).convert("RGB")
-            imagen_tensor = self.clip_preprocess(imagen).unsqueeze(0).to(self.device)
-
-            with torch.no_grad():
-                features = self.clip_model.encode_image(imagen_tensor)
-                features = features / features.norm(dim=-1, keepdim=True)
-
-            return features.cpu().numpy().flatten()
-
-        except Exception as e:
-            log.warning("No se pudo generar embedding de imagen desde %s: %s", url_foto, e)
+        if not url_foto:
             return None
+
+        url_interna = url_foto.replace(settings.minio_public_url, settings.minio_internal_url, 1)
+        if url_interna == url_foto and not url_foto.startswith(settings.minio_internal_url):
+            log.warning(
+                "URL de foto no contiene minio_public_url ('%s') — usando sin modificar: %s",
+                settings.minio_public_url, url_foto,
+            )
+
+        ultimo_error: Optional[Exception] = None
+        for intento in range(2):
+            try:
+                response = requests.get(url_interna, timeout=10)
+                response.raise_for_status()
+
+                imagen = Image.open(io.BytesIO(response.content)).convert("RGB")
+                imagen_tensor = self.clip_preprocess(imagen).unsqueeze(0).to(self.device)
+
+                with torch.no_grad():
+                    features = self.clip_model.encode_image(imagen_tensor)
+                    features = features / features.norm(dim=-1, keepdim=True)
+
+                return features.cpu().numpy().flatten()
+
+            except Exception as e:
+                ultimo_error = e
+                if intento == 0:
+                    log.debug("Reintentando descarga de imagen desde %s: %s", url_interna, e)
+
+        log.warning(
+            "No se pudo generar embedding de imagen desde %s tras 2 intentos: %s",
+            url_foto, ultimo_error,
+        )
+        return None
 
     def generar_embedding_combinado(
         self,
@@ -96,7 +115,11 @@ class EmbeddingService:
         url_foto: Optional[str],
     ) -> np.ndarray:
         """
+        Deprecated: usar generar_texto_embedding + generar_imagen_embedding por separado.
+
         Combina embeddings de texto e imagen en un único vector de 512 dims.
+        El texto se genera en 768D (nativo del modelo) y se reduce a 512D
+        internamente antes de combinarlo con el embedding CLIP de imagen.
 
         Pesos de la combinación:
           - Texto: 60% (nombre + raza + color + descripción concatenados)
@@ -109,13 +132,14 @@ class EmbeddingService:
         partes = [p for p in [nombre, raza, color, descripcion] if p]
         texto = " ".join(partes) if partes else "mascota"
 
-        emb_texto = self.generar_texto_embedding(texto)   # (512,)
+        emb_texto = self.generar_texto_embedding(texto)   # 768D nativo
         emb_imagen = self.generar_imagen_embedding(url_foto) if url_foto else None
 
         if emb_imagen is not None:
-            combinado = 0.6 * emb_texto + 0.4 * emb_imagen
+            emb_texto_512 = self._ajustar_dimension(emb_texto, 512)
+            combinado = 0.6 * emb_texto_512 + 0.4 * emb_imagen
         else:
-            combinado = emb_texto
+            combinado = self._ajustar_dimension(emb_texto, 512)
 
         # Normalizar a norma unitaria para que cosine_similarity funcione correctamente
         combinado = normalize(combinado.reshape(1, -1)).flatten()

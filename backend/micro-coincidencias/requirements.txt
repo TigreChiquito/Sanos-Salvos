@@ -46,3 +46,6 @@ haversine==2.8.1         # distancia entre coordenadas lat/lng
 # ── Config ───────────────────────────────────────────────────
 pydantic-settings==2.5.2
 python-dotenv==1.0.1
+
+# Metricas Prometheus
+prometheus-fastapi-instrumentator==6.1.0

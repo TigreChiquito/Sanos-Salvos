@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: micro-coincidencias
+  namespace: sanos-salvos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: micro-coincidencias
+  template:
+    metadata:
+      labels:
+        app: micro-coincidencias
+    spec:
+      containers:
+        - name: micro-coincidencias
+          image: ss-micro-coincidencias:latest
+          imagePullPolicy: Never
+          env:
+            - name: POSTGRES_URL
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: POSTGRES_URL_PY
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka:9092
+            - name: MATCH_THRESHOLD
+              value: "0.80"
+            - name: MAX_DISTANCIA_KM
+              value: "10.0"
+            - name: MINIO_PUBLIC_URL
+              value: http://localhost:9000
+            - name: MINIO_INTERNAL_URL
+              value: http://minio:9000
+          ports:
+            - containerPort: 8084
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8084
+            initialDelaySeconds: 90
+            periodSeconds: 20
+            failureThreshold: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: micro-coincidencias
+  namespace: sanos-salvos
+spec:
+  selector:
+    app: micro-coincidencias
+  ports:
+    - port: 8084
+      targetPort: 8084
+  type: ClusterIP

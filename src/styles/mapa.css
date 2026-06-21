@@ -127,7 +127,7 @@
 }
 .mv-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(45,27,18,.1); border-color: rgba(45,27,18,.15); }
 .mv-card.selected { border-color: #C45C3A; box-shadow: 0 0 0 3px rgba(196,92,58,.15); }
-.mv-card-top { display: flex; gap: .65rem; align-items: flex-start; margin-bottom: .55rem; }
+.mv-card-top { display: flex; gap: .65rem; align-items: flex-start; margin-bottom: .55rem; cursor: pointer; }
 .mv-card-photo { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
 .mv-card-info { flex: 1; min-width: 0; }
 .mv-card-name {
@@ -312,6 +312,10 @@
   70%  { box-shadow: 0 0 0 6px rgba(94,201,94,0); }
   100% { box-shadow: 0 0 0 0 rgba(94,201,94,0); }
 }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.mv-spinning { animation: spin 1.5s linear infinite; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {

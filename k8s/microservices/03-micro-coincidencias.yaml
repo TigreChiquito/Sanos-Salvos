@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: micro-coincidencias
+  namespace: sanos-salvos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: micro-coincidencias
+  template:
+    metadata:
+      labels:
+        app: micro-coincidencias
+    spec:
+      containers:
+        - name: micro-coincidencias
+          image: ss-micro-coincidencias:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+          env:
+            - name: POSTGRES_URL
+              value: postgresql://ss_admin:ss_dev_password_2024@postgres:5432/sanos_salvos
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka-0.kafka-hs.sanos-salvos.svc.cluster.local:9092
+            - name: KAFKA_GROUP_ID
+              value: ss-coincidencias
+            - name: MINIO_PUBLIC_URL
+              value: http://localhost:30900
+            - name: MINIO_INTERNAL_URL
+              value: http://minio:9000
+            - name: MATCH_THRESHOLD
+              value: "0.80"
+            - name: MAX_DISTANCIA_KM
+              value: "10.0"
+            - name: DEBUG
+              value: "false"
+          resources:
+            requests:
+              memory: 1Gi
+              cpu: 500m
+            limits:
+              memory: 3Gi
+              cpu: 2000m
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8084
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8084
+            initialDelaySeconds: 90
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: micro-coincidencias
+  namespace: sanos-salvos
+spec:
+  selector:
+    app: micro-coincidencias
+  ports:
+    - port: 8084
+      targetPort: 8084

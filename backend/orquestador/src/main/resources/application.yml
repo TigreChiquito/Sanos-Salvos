@@ -69,6 +69,28 @@ spring:
                 name: coincidenciasCircuitBreaker
                 fallbackUri: forward:/fallback/coincidencias
 
+        # ── Proxy de API docs para Swagger UI agregado ────────
+        - id: docs-usuarios
+          uri: http://micro-usuarios:8081
+          predicates:
+            - Path=/api-docs/usuarios
+          filters:
+            - RewritePath=/api-docs/usuarios, /api-docs
+
+        - id: docs-mascotas
+          uri: http://micro-mascotas:8082
+          predicates:
+            - Path=/api-docs/mascotas
+          filters:
+            - RewritePath=/api-docs/mascotas, /api-docs
+
+        - id: docs-coincidencias
+          uri: http://micro-coincidencias:8084
+          predicates:
+            - Path=/api-docs/coincidencias
+          filters:
+            - RewritePath=/api-docs/coincidencias, /openapi.json
+
       # Filtros globales aplicados a todas las rutas
       default-filters:
         # Reintenta en caso de error de conexión (no en errores 4xx/5xx del micro)
@@ -138,13 +160,18 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, circuitbreakers, circuitbreakerevents, metrics
+        include: health, info, circuitbreakers, circuitbreakerevents, metrics, prometheus
   endpoint:
     health:
       show-details: always
+    prometheus:
+      enabled: true
   health:
     circuitbreakers:
       enabled: true
+  metrics:
+    tags:
+      application: orquestador
 
 # ── Configuración propia ───────────────────────────────────────
 app:
@@ -156,7 +183,7 @@ app:
     allowed-origins: ${FRONTEND_URL:http://localhost:4321}
 
   # Rutas que NO requieren JWT (públicas) — comma-separated para compatibilidad con @Value
-  public-paths: /oauth2/**,/login/oauth2/**,/api/auth/logout,/fallback/**,/actuator/health,/swagger-ui/**,/api-docs/**
+  public-paths: /oauth2/**,/login/oauth2/**,/api/auth/logout,/fallback/**,/actuator/health,/actuator/prometheus,/actuator/metrics/**,/swagger-ui/**,/api-docs/**
 
 # ── Swagger ───────────────────────────────────────────────────
 springdoc:
@@ -169,11 +196,11 @@ springdoc:
       - name: orquestador
         url: /api-docs
       - name: micro-usuarios
-        url: http://micro-usuarios:8081/api-docs
+        url: /api-docs/usuarios
       - name: micro-mascotas
-        url: http://micro-mascotas:8082/api-docs
+        url: /api-docs/mascotas
       - name: micro-coincidencias
-        url: http://micro-coincidencias:8084/openapi.json
+        url: /api-docs/coincidencias
 
 # ── Logging ───────────────────────────────────────────────────
 logging:

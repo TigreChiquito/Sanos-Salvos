@@ -1,8 +1,7 @@
 """
 Productor Kafka — publica eventos de coincidencias encontradas.
 
-El orquestador (Springboot) y el micro de usuarios escucharán
-ss.coincidencias.found para notificar a los dueños de las mascotas.
+micro-usuarios escuchará ss.coincidencias.found para notificar a los dueños.
 """
 import json
 import logging
@@ -11,7 +10,6 @@ from datetime import datetime, timezone
 from aiokafka import AIOKafkaProducer
 
 from app.config import settings
-from app.models.coincidencia import Coincidencia
 
 log = logging.getLogger(__name__)
 
@@ -36,29 +34,36 @@ async def stop_producer():
         log.info("Kafka producer detenido")
 
 
-async def publicar_coincidencia(coincidencia: Coincidencia):
-    """Publica un evento de nueva coincidencia en Kafka."""
+async def publicar_coincidencia(item: dict):
+    """
+    Publica un evento de coincidencia en Kafka.
+    `item` es un dict puro serializado por matching_service (sin ORM objects).
+    """
     if not _producer:
         log.error("Producer no inicializado")
         return
 
+    score_total = item["score_total"]
     payload = {
         "eventType":            "COINCIDENCIA_ENCONTRADA",
-        "coincidenciaId":       str(coincidencia.id),
-        "reportePerdidoId":     str(coincidencia.reporte_perdido_id),
-        "reporteEncontradoId":  str(coincidencia.reporte_encontrado_id),
-        "scoreTotal":           float(coincidencia.score_total),
-        "estado":               coincidencia.estado,
+        "coincidenciaId":       item["coincidencia_id"],
+        "reportePerdidoId":     item["reporte_perdido_id"],
+        "reporteEncontradoId":  item["reporte_encontrado_id"],
+        "usuarioPerdidoId":     item["usuario_perdido_id"],
+        "usuarioEncontradoId":  item["usuario_encontrado_id"],
+        "scoreTotal":           score_total,
+        "scorePorcentaje":      round(score_total * 100, 1),
+        "estado":               item["estado"],
         "timestamp":            datetime.now(timezone.utc).isoformat(),
     }
 
     try:
         await _producer.send_and_wait(
             settings.kafka_topic_coincidencias,
-            key=str(coincidencia.id),
+            key=item["coincidencia_id"],
             value=payload,
         )
         log.info("Coincidencia publicada en Kafka: %s (score: %.4f)",
-                 coincidencia.id, float(coincidencia.score_total))
+                 item["coincidencia_id"], score_total)
     except Exception as e:
         log.error("Error publicando coincidencia en Kafka: %s", e)

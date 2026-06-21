@@ -2,9 +2,9 @@
 Orquestador del Motor de Coincidencias.
 
 Flujo por cada nuevo reporte:
-  1. Generar embedding combinado (texto + imagen) → guardar en PostgreSQL
+  1. Generar embeddings separados (texto 768D + imagen CLIP 512D) → guardar en PostgreSQL
   2. Buscar candidatos del tipo opuesto (perdido ↔ encontrado), misma especie
-  3. Calcular scores contra cada candidato
+  3. Calcular scores contra cada candidato usando embeddings independientes
   4. Si score_total >= threshold → crear/actualizar coincidencia en PostgreSQL
   5. Retornar lista de coincidencias encontradas para que el producer las publique
 """
@@ -47,12 +47,13 @@ def procesar_reporte(
     """
     log.info("Procesando matching para reporte %s (%s %s)", reporte_id, tipo, animal)
 
-    # 1. Generar embedding y persistirlo en PostgreSQL
+    # 1. Generar embeddings separados y persistirlos en PostgreSQL
+    partes = [p for p in [nombre, raza, color, descripcion] if p]
+    texto = " ".join(partes) if partes else "mascota"
+    emb_texto = embedding_service.generar_texto_embedding(texto)
     url_foto_principal = urls_fotos[0] if urls_fotos else None
-    embedding = embedding_service.generar_embedding_combinado(
-        nombre, raza, color, descripcion, url_foto_principal
-    )
-    _guardar_embedding(db, reporte_id, embedding)
+    emb_imagen = embedding_service.generar_imagen_embedding(url_foto_principal) if url_foto_principal else None
+    _guardar_embeddings(db, reporte_id, emb_texto, emb_imagen)
 
     # 2. Buscar candidatos del tipo opuesto, misma especie, estado activo
     tipo_opuesto = "encontrado" if tipo == "perdido" else "perdido"
@@ -73,29 +74,23 @@ def procesar_reporte(
     coincidencias_creadas = []
 
     for candidato in candidatos:
-        emb_candidato = (
-            np.array(candidato.embedding, dtype=np.float32)
-            if candidato.embedding is not None
-            else None
+        emb_texto_candidato = (
+            np.array(candidato.embedding_texto, dtype=np.float32)
+            if candidato.embedding_texto is not None else None
+        )
+        emb_imagen_candidato = (
+            np.array(candidato.embedding_imagen, dtype=np.float32)
+            if candidato.embedding_imagen is not None else None
         )
 
         scores = calcular_scores(
-            nombre_a=nombre,
-            raza_a=raza,
-            color_a=color,
-            tamano_a=tamano,
-            descripcion_a=descripcion,
-            lat_a=lat,
-            lng_a=lng,
-            embedding_a=embedding,
-            nombre_b=candidato.nombre,
-            raza_b=candidato.raza,
-            color_b=candidato.color,
-            tamano_b=candidato.tamano,
-            descripcion_b=candidato.descripcion,
-            lat_b=float(candidato.lat),
-            lng_b=float(candidato.lng),
-            embedding_b=emb_candidato,
+            nombre_a=nombre, raza_a=raza, color_a=color, tamano_a=tamano,
+            descripcion_a=descripcion, lat_a=lat, lng_a=lng,
+            emb_texto_a=emb_texto, emb_imagen_a=emb_imagen,
+            nombre_b=candidato.nombre, raza_b=candidato.raza, color_b=candidato.color,
+            tamano_b=candidato.tamano, descripcion_b=candidato.descripcion,
+            lat_b=float(candidato.lat), lng_b=float(candidato.lng),
+            emb_texto_b=emb_texto_candidato, emb_imagen_b=emb_imagen_candidato,
         )
 
         score_total = scores["total"]
@@ -118,14 +113,15 @@ def procesar_reporte(
 
 # ── Privado ────────────────────────────────────────────────────────────────
 
-def _guardar_embedding(db: Session, reporte_id: str, embedding: np.ndarray) -> None:
-    """Actualiza el campo embedding del reporte en PostgreSQL."""
+def _guardar_embeddings(db: Session, reporte_id: str, emb_texto: np.ndarray, emb_imagen: Optional[np.ndarray]) -> None:
+    """Actualiza los embeddings separados del reporte en PostgreSQL."""
     reporte = db.query(Reporte).filter(Reporte.id == uuid.UUID(reporte_id)).first()
     if reporte:
-        reporte.embedding = embedding.tolist()
+        reporte.embedding_texto  = emb_texto.tolist() if emb_texto is not None else None
+        reporte.embedding_imagen = emb_imagen.tolist() if emb_imagen is not None else None
         db.flush()
     else:
-        log.warning("Reporte %s no encontrado al intentar guardar embedding", reporte_id)
+        log.warning("Reporte %s no encontrado al intentar guardar embeddings", reporte_id)
 
 
 def _upsert_coincidencia(

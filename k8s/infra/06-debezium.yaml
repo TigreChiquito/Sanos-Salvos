@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: debezium
+  namespace: sanos-salvos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: debezium
+  template:
+    metadata:
+      labels:
+        app: debezium
+    spec:
+      containers:
+        - name: debezium
+          image: debezium/connect:2.6
+          ports:
+            - containerPort: 8083
+          env:
+            - name: BOOTSTRAP_SERVERS
+              value: kafka-0.kafka-hs.sanos-salvos.svc.cluster.local:9092
+            - name: GROUP_ID
+              value: ss-debezium-group
+            - name: CONFIG_STORAGE_TOPIC
+              value: ss.debezium.configs
+            - name: OFFSET_STORAGE_TOPIC
+              value: ss.debezium.offsets
+            - name: STATUS_STORAGE_TOPIC
+              value: ss.debezium.status
+            - name: CONFIG_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: OFFSET_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: STATUS_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: KEY_CONVERTER
+              value: org.apache.kafka.connect.json.JsonConverter
+            - name: VALUE_CONVERTER
+              value: org.apache.kafka.connect.json.JsonConverter
+            - name: KEY_CONVERTER_SCHEMAS_ENABLE
+              value: "false"
+            - name: VALUE_CONVERTER_SCHEMAS_ENABLE
+              value: "false"
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 250m
+            limits:
+              memory: 1Gi
+              cpu: 500m
+          readinessProbe:
+            httpGet:
+              path: /connectors
+              port: 8083
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /connectors
+              port: 8083
+            initialDelaySeconds: 90
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: debezium
+  namespace: sanos-salvos
+spec:
+  selector:
+    app: debezium
+  ports:
+    - port: 8083
+      targetPort: 8083
