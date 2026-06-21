@@ -28,7 +28,11 @@ class Reporte(Base):
 
     # Vector de 512 dimensiones — gestionado exclusivamente por este micro
     # Compatible con CLIP ViT-B/32 y paraphrase-multilingual-mpnet-base-v2
-    embedding   = Column(Vector(512))
+    embedding        = Column(Vector(512))
+
+    # Embeddings separados para scoring independiente
+    embedding_texto  = Column(Vector(768))  # texto puro (nombre+raza+color+desc), nativo 768D
+    embedding_imagen = Column(Vector(512))  # CLIP ViT-B/32 de la foto principal
 
     created_at  = Column(TIMESTAMP(timezone=True))
     updated_at  = Column(TIMESTAMP(timezone=True))

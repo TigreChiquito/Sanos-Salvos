@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ss-config
+  namespace: sanos-salvos
+data:
+  # ── URLs internas del cluster ─────────────────────────────
+  POSTGRES_URL: jdbc:postgresql://postgres:5432/sanos_salvos
+  MONGO_URL: mongodb://ss_admin:ss_dev_password_2024@mongodb:27017/sanos_salvos_read?authSource=admin
+  KAFKA_BOOTSTRAP_SERVERS: kafka-0.kafka-hs.sanos-salvos.svc.cluster.local:9092
+  KAFKA_GROUP_ID: ss-consumers
+  MINIO_ENDPOINT: http://minio:9000
+  MINIO_PUBLIC_URL: http://localhost:30900
+  MINIO_INTERNAL_URL: http://minio:9000
+  DEBEZIUM_URL: http://debezium:8083
+
+  # ── Motor de Coincidencias ────────────────────────────────
+  MATCH_THRESHOLD: "0.80"
+  MAX_DISTANCIA_KM: "10.0"
+
+  # ── Frontend ──────────────────────────────────────────────
+  FRONTEND_URL: http://localhost:4321
+
+  # ── App ───────────────────────────────────────────────────
+  APP_ENV: development
