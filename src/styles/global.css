@@ -1,0 +1,45 @@
+/* ─────────────────────────────────────────────
+   Sanos & Salvos — Global Styles
+   ───────────────────────────────────────────── */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,700&family=Nunito:wght@400;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+/* ── Design Tokens ── */
+:root {
+  --sand: #F5EFE0;
+  --cream: #FDF8F0;
+  --terra: #C45C3A;
+  --terra-d: #9E4026;
+  --terra-l: #F0C5B4;
+  --sage: #6B8F71;
+  --sage-l: #C8DEC9;
+  --brown: #2D1B12;
+  --brown-m: #5C3D2C;
+  --gold: #E8A838;
+}
+
+/* ── Base ── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background-color: var(--cream);
+  color: var(--brown);
+  overflow-x: hidden;
+}
+
+/* ── Utilidad tipográfica global ── */
+@layer utilities {
+  .font-display {
+    font-family: 'Fraunces', serif;
+  }
+}

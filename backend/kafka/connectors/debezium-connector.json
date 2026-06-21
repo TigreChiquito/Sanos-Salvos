@@ -1,0 +1,32 @@
+{
+  "name": "ss-postgres-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "${file:/kafka/connect.properties:POSTGRES_USER}",
+    "database.password": "${file:/kafka/connect.properties:POSTGRES_PASSWORD}",
+    "database.dbname": "${file:/kafka/connect.properties:POSTGRES_DB}",
+    "database.server.name": "ss-postgres",
+
+    "plugin.name": "pgoutput",
+    "publication.name": "ss_publication",
+    "publication.autocreate.mode": "disabled",
+
+    "table.include.list": "public.usuarios,public.reportes,public.fotos,public.coincidencias,public.notificaciones",
+
+    "topic.prefix": "ss",
+
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false",
+
+    "heartbeat.interval.ms": "5000",
+    "snapshot.mode": "initial",
+
+    "tombstones.on.delete": "false",
+    "decimal.handling.mode": "string"
+  }
+}

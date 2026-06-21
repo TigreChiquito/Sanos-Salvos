@@ -1,0 +1,486 @@
+---
+// src/pages/reportar.astro
+import BaseLayout  from '../layouts/BaseLayout.astro';
+import NavbarApp   from '../components/NavbarApp.astro';
+import '../styles/reportar.css';
+---
+
+<BaseLayout
+  title="Reportar — Sanos & Salvos"
+  description="Publica un reporte de mascota perdida o encontrada en tu zona."
+>
+  <NavbarApp active="reportar" />
+
+  <div class="rp-page">
+
+    <!-- ── HEADER ── -->
+    <header class="rp-header">
+      <div class="rp-header-inner">
+        <span class="rp-header-tag">Nueva publicación</span>
+        <h1 class="rp-title">Crear reporte</h1>
+        <p class="rp-subtitle">
+          Completa los campos y marca la ubicación en el mapa.<br />
+          Tu reporte será visible para toda la comunidad al instante.
+        </p>
+      </div>
+    </header>
+
+    <!-- ── FORM ── -->
+    <form class="rp-form" id="rp-form" novalidate>
+      <div class="rp-columns">
+
+        <!-- ─── LEFT: campos ─── -->
+        <div class="rp-fields">
+
+          <!-- Tipo de reporte -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">1</span>Tipo de reporte
+            </h2>
+            <div class="rp-radio-row">
+              <label class="rp-radio-pill" data-value="perdido">
+                <input type="radio" name="tipo" value="perdido" required />
+                <span class="rp-radio-inner">
+                  <span class="rp-radio-dot perdido"></span>
+                  Perdido
+                </span>
+              </label>
+              <label class="rp-radio-pill" data-value="encontrado">
+                <input type="radio" name="tipo" value="encontrado" />
+                <span class="rp-radio-inner">
+                  <span class="rp-radio-dot encontrado"></span>
+                  Encontrado
+                </span>
+              </label>
+            </div>
+          </section>
+
+          <!-- Tipo de animal -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">2</span>Animal
+            </h2>
+            <div class="rp-radio-row">
+              <label class="rp-radio-pill" data-value="perro">
+                <input type="radio" name="animal" value="perro" required />
+                <span class="rp-radio-inner">🐕 Perro</span>
+              </label>
+              <label class="rp-radio-pill" data-value="gato">
+                <input type="radio" name="animal" value="gato" />
+                <span class="rp-radio-inner">🐱 Gato</span>
+              </label>
+              <label class="rp-radio-pill" data-value="otro">
+                <input type="radio" name="animal" value="otro" />
+                <span class="rp-radio-inner">🐾 Otro</span>
+              </label>
+            </div>
+          </section>
+
+          <!-- Nombre -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">3</span>Nombre del animal
+              <span class="rp-optional">opcional</span>
+            </h2>
+            <input
+              type="text" name="nombre"
+              class="rp-input" placeholder="Ej: Max, Luna, Michi…"
+              autocomplete="off"
+            />
+          </section>
+
+          <!-- Características físicas -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">4</span>Características físicas
+            </h2>
+            <div class="rp-fields-grid">
+              <div class="rp-field">
+                <label for="f-raza">Raza</label>
+                <!-- Se puebla dinámicamente según el animal seleccionado -->
+                <select id="f-raza" name="raza" class="rp-input rp-select" disabled>
+                  <option value="">Selecciona un animal primero…</option>
+                </select>
+                <!-- Visible solo cuando animal = "otro" -->
+                <input type="text" id="f-raza-otro" name="raza_otro" class="rp-input rp-hidden" placeholder="Describe el animal…" />
+              </div>
+              <div class="rp-field">
+                <label for="f-color">Color principal</label>
+                <input type="text" id="f-color" name="color" class="rp-input" placeholder="Ej: Dorado, Negro y blanco…" />
+              </div>
+              <div class="rp-field">
+                <label for="f-tamano">Tamaño</label>
+                <select id="f-tamano" name="tamano" class="rp-input rp-select">
+                  <option value="">Seleccionar…</option>
+                  <option value="pequeño">Pequeño  (&lt;10 kg)</option>
+                  <option value="mediano">Mediano  (10–25 kg)</option>
+                  <option value="grande">Grande  (&gt;25 kg)</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- Descripción -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">5</span>Descripción
+            </h2>
+            <textarea
+              name="descripcion" id="f-desc"
+              class="rp-input rp-textarea" rows="4"
+              placeholder="Señas particulares, collar, microchip, comportamiento, contexto de cómo se perdió o encontró…"
+            ></textarea>
+            <span class="rp-char-count" id="rp-char-count">0 / 600</span>
+          </section>
+
+          <!-- Fotos -->
+          <section class="rp-section">
+            <h2 class="rp-section-title">
+              <span class="rp-step">6</span>Fotos
+              <span class="rp-optional">hasta 5 imágenes</span>
+            </h2>
+            <div class="rp-upload-zone" id="rp-upload-zone">
+              <input type="file" id="rp-file-input" accept="image/*" multiple class="rp-file-hidden" />
+              <div class="rp-upload-prompt" id="rp-upload-prompt">
+                <div class="rp-upload-icon">📷</div>
+                <p>Arrastra tus fotos aquí o
+                  <button type="button" class="rp-upload-link" id="rp-upload-btn">selecciona archivos</button>
+                </p>
+                <p class="rp-upload-hint">JPG · PNG · WEBP &nbsp;·&nbsp; máx. 5 MB por foto</p>
+              </div>
+            </div>
+            <div class="rp-previews" id="rp-previews"></div>
+          </section>
+
+        </div><!-- /rp-fields -->
+
+        <!-- ─── RIGHT: mapa ─── -->
+        <aside class="rp-map-col">
+          <div class="rp-map-sticky">
+            <section class="rp-section rp-map-section">
+              <h2 class="rp-section-title">
+                <span class="rp-step">7</span>Ubicación
+              </h2>
+              <p class="rp-map-hint">
+                Haz clic en el mapa para marcar dónde fue visto el animal.
+              </p>
+              <div class="rp-map-container" id="rp-map"></div>
+              <div class="rp-location-pill" id="rp-location-pill">
+                <span class="rp-loc-dot" id="rp-loc-dot"></span>
+                <span id="rp-location-text">Sin ubicación seleccionada</span>
+              </div>
+              <input type="hidden" name="lat" id="rp-lat" />
+              <input type="hidden" name="lng" id="rp-lng" />
+            </section>
+          </div>
+        </aside>
+
+      </div><!-- /rp-columns -->
+
+      <!-- Submit -->
+      <div class="rp-submit-row">
+        <p class="rp-submit-note">
+          Al publicar aceptas que este reporte sea visible públicamente en el mapa.
+        </p>
+        <button type="submit" class="rp-submit-btn" id="rp-submit">
+          Publicar reporte
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- ── CONFIRMACIÓN ── -->
+  <div class="rp-confirm" id="rp-confirm" aria-hidden="true">
+    <div class="rp-confirm-card">
+      <div class="rp-confirm-emoji">🐾</div>
+      <h2 class="rp-confirm-title">¡Reporte publicado!</h2>
+      <p class="rp-confirm-text">
+        Tu reporte ya está visible para toda la comunidad.<br />
+        Esperamos que pronto haya buenas noticias.
+      </p>
+      <a href="/mapa" class="rp-confirm-btn">Ver en el mapa →</a>
+      <button type="button" class="rp-confirm-new" id="rp-confirm-new">
+        Publicar otro reporte
+      </button>
+    </div>
+  </div>
+
+</BaseLayout>
+
+<script>
+  import { getSession } from '../lib/auth';
+  import { apiFetch } from '../lib/api';
+
+  // ── Redirigir si no hay sesión ──
+  if (!getSession()) window.location.replace('/acceder');
+
+  // ── Razas por animal ──
+  const RAZAS: Record<string, string[]> = {
+    perro: [
+      'Mestizo / Mixto',
+      'Labrador Retriever', 'Golden Retriever', 'Pastor Alemán',
+      'Husky Siberiano', 'Border Collie', 'Beagle', 'Bulldog Francés',
+      'Poodle / Caniche', 'Chihuahua', 'Dachshund / Salchicha',
+      'Boxer', 'Rottweiler', 'Doberman', 'Pitbull / American Staffordshire',
+      'Schnauzer', 'Shih Tzu', 'Yorkshire Terrier', 'Maltés',
+      'Cocker Spaniel', 'Springer Spaniel', 'Samoyedo', 'Akita',
+      'Shar Pei', 'Pug / Carlino', 'Bichón Frisé', 'Weimaraner',
+      'Dálmata', 'Gran Danés', 'San Bernardo', 'Chow Chow',
+    ],
+    gato: [
+      'Mestizo / Mixto',
+      'Común Europeo', 'Persa', 'Siamés', 'Maine Coon',
+      'Ragdoll', 'Bengalí', 'Angora Turco', 'British Shorthair',
+      'Scottish Fold', 'Sphynx', 'Abisinio', 'Birmano',
+      'Noruego del Bosque', 'Ruso Azul', 'Himálayo',
+      'Bombay', 'Tonkinés', 'Somalí', 'Manx',
+    ],
+  };
+
+  const razaSelect = document.getElementById('f-raza')      as HTMLSelectElement;
+  const razaOtro   = document.getElementById('f-raza-otro') as HTMLInputElement;
+
+  function updateRazas(animal: string) {
+    if (animal === 'otro') {
+      razaSelect.style.display = 'none';
+      razaOtro.style.display   = '';
+      razaSelect.disabled = true;
+      razaOtro.required   = false;
+      return;
+    }
+    razaSelect.style.display = '';
+    razaOtro.style.display   = 'none';
+    razaSelect.disabled = false;
+
+    const list = RAZAS[animal] ?? [];
+    razaSelect.innerHTML =
+      `<option value="">Seleccionar raza…</option>` +
+      list.map(r => `<option value="${r}">${r}</option>`).join('');
+  }
+
+  // ── Radio pills ──
+  document.querySelectorAll<HTMLElement>('.rp-radio-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const input = pill.querySelector<HTMLInputElement>('input');
+      if (!input) return;
+      input.checked = true;
+      // Si es el grupo "animal", actualizar razas
+      if (input.name === 'animal') updateRazas(input.value);
+    });
+  });
+
+  // ── Contador de caracteres ──
+  const desc  = document.getElementById('f-desc')      as HTMLTextAreaElement;
+  const count = document.getElementById('rp-char-count');
+  const MAX   = 600;
+  desc?.addEventListener('input', () => {
+    if (count) count.textContent = `${desc.value.length} / ${MAX}`;
+    if (desc.value.length > MAX) desc.value = desc.value.slice(0, MAX);
+  });
+
+  // ── Upload de fotos ──
+  const fileInput  = document.getElementById('rp-file-input')  as HTMLInputElement;
+  const uploadZone = document.getElementById('rp-upload-zone') as HTMLDivElement;
+  const uploadBtn  = document.getElementById('rp-upload-btn')  as HTMLButtonElement;
+  const previews   = document.getElementById('rp-previews')    as HTMLDivElement;
+
+  let selectedFiles: File[] = [];
+
+  uploadBtn?.addEventListener('click', () => fileInput?.click());
+  uploadZone?.addEventListener('click', (e) => {
+    if (e.target === uploadZone || (e.target as HTMLElement).closest('.rp-upload-prompt'))
+      fileInput?.click();
+  });
+
+  // Drag & drop
+  uploadZone?.addEventListener('dragover',  (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone?.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone?.addEventListener('drop',      (e) => {
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/'));
+    addFiles(files);
+  });
+
+  fileInput?.addEventListener('change', () => {
+    addFiles(Array.from(fileInput.files ?? []));
+    fileInput.value = '';
+  });
+
+  function addFiles(files: File[]) {
+    const remaining = 5 - selectedFiles.length;
+    files.slice(0, remaining).forEach(file => {
+      selectedFiles.push(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const item = document.createElement('div');
+        item.className = 'rp-preview-item';
+        item.dataset.name = file.name;
+        item.innerHTML = `
+          <img src="${e.target?.result}" alt="${file.name}" />
+          <button type="button" class="rp-preview-remove" aria-label="Quitar foto">✕</button>`;
+        item.querySelector('.rp-preview-remove')?.addEventListener('click', () => {
+          selectedFiles = selectedFiles.filter(f => f.name !== file.name);
+          item.remove();
+        });
+        previews.appendChild(item);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ── Mapa Leaflet ──
+  (async () => {
+    const L = (await import('leaflet')).default;
+    await import('leaflet/dist/leaflet.css');
+
+    const RM_BOUNDS = L.latLngBounds([-34.6, -71.8], [-32.9, -70.0]);
+    const map = L.map('rp-map', {
+      zoomControl: true,
+      maxBounds: RM_BOUNDS,
+      maxBoundsViscosity: 1.0,
+      minZoom: 10, maxZoom: 18,
+    }).setView([-33.4489, -70.6693], 12);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      subdomains: 'abcd', maxZoom: 18, bounds: RM_BOUNDS,
+    }).addTo(map);
+
+    let marker: ReturnType<typeof L.marker> | null = null;
+    const latInput  = document.getElementById('rp-lat')  as HTMLInputElement;
+    const lngInput  = document.getElementById('rp-lng')  as HTMLInputElement;
+    const locPill   = document.getElementById('rp-location-pill')  as HTMLElement;
+    const locText   = document.getElementById('rp-location-text')  as HTMLElement;
+
+    const pinIcon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:32px;height:32px;border-radius:50%;
+        background:#C45C3A;border:3px solid white;
+        box-shadow:0 3px 12px rgba(0,0,0,.45);
+        display:flex;align-items:center;justify-content:center;
+        font-size:14px;
+      ">📍</div>`,
+      iconSize: [32, 32], iconAnchor: [16, 32],
+    });
+
+    map.on('click', (e) => {
+      const { lat, lng } = e.latlng;
+      if (marker) marker.setLatLng([lat, lng]);
+      else marker = L.marker([lat, lng], { icon: pinIcon }).addTo(map);
+
+      latInput.value = lat.toFixed(6);
+      lngInput.value = lng.toFixed(6);
+
+      locText.textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      locPill.classList.add('has-location');
+    });
+
+    // Invalida tamaño al cargar (por el sticky)
+    setTimeout(() => map.invalidateSize(), 100);
+  })();
+
+  // ── Submit ──
+  const form      = document.getElementById('rp-form')        as HTMLFormElement;
+  const confirm   = document.getElementById('rp-confirm')     as HTMLElement;
+  const newBtn    = document.getElementById('rp-confirm-new') as HTMLButtonElement;
+  const submitBtn = document.getElementById('rp-submit')      as HTMLButtonElement;
+
+  function showSubmitError(msg: string) {
+    let errEl = document.getElementById('rp-submit-error');
+    if (!errEl) {
+      errEl = document.createElement('p');
+      errEl.id = 'rp-submit-error';
+      errEl.className = 'rp-submit-error';
+      submitBtn.parentElement?.appendChild(errEl);
+    }
+    errEl.textContent = `⚠️ ${msg}`;
+  }
+
+  function clearSubmitError() {
+    document.getElementById('rp-submit-error')?.remove();
+  }
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearSubmitError();
+
+    // ── Validaciones ──
+    const tipoInput   = form.querySelector<HTMLInputElement>('input[name="tipo"]:checked');
+    const animalInput = form.querySelector<HTMLInputElement>('input[name="animal"]:checked');
+    const latInput    = document.getElementById('rp-lat') as HTMLInputElement;
+    const lngInput    = document.getElementById('rp-lng') as HTMLInputElement;
+
+    if (!tipoInput)         { showSubmitError('Selecciona el tipo de reporte.'); return; }
+    if (!animalInput)       { showSubmitError('Selecciona el tipo de animal.'); return; }
+    if (!latInput.value)    { showSubmitError('Marca la ubicación del animal en el mapa.'); return; }
+
+    // ── Construir payload JSON (parte "datos") ──
+    const nombreVal = (form.querySelector<HTMLInputElement>('input[name="nombre"]'))?.value.trim();
+
+    const razaSelectEl  = document.getElementById('f-raza')      as HTMLSelectElement;
+    const razaOtroInput = document.getElementById('f-raza-otro') as HTMLInputElement;
+    const razaVal = razaSelectEl.style.display === 'none'
+      ? razaOtroInput.value.trim()
+      : razaSelectEl.value;
+
+    const colorVal  = (document.getElementById('f-color')  as HTMLInputElement).value.trim();
+    const tamanoVal = (document.getElementById('f-tamano') as HTMLSelectElement).value;
+    const descVal   = (document.getElementById('f-desc')   as HTMLTextAreaElement).value.trim();
+
+    const datos: Record<string, unknown> = {
+      tipo:   tipoInput.value,
+      animal: animalInput.value,
+      lat:    parseFloat(latInput.value),
+      lng:    parseFloat(lngInput.value),
+    };
+    if (nombreVal) datos.nombre      = nombreVal;
+    if (razaVal)   datos.raza        = razaVal;
+    if (colorVal)  datos.color       = colorVal;
+    if (tamanoVal) datos.tamano      = tamanoVal;
+    if (descVal)   datos.descripcion = descVal;
+
+    // El backend espera multipart con dos partes: "datos" (JSON) y "fotos" (archivos)
+    const fd = new FormData();
+    fd.append('datos', new Blob([JSON.stringify(datos)], { type: 'application/json' }));
+    selectedFiles.forEach(file => fd.append('fotos', file));
+
+    // ── Enviar al backend ──
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Publicando…';
+
+    try {
+      await apiFetch('/api/reportes', { method: 'POST', body: fd });
+
+      // Éxito: mostrar confirmación
+      confirm.classList.add('show');
+      confirm.setAttribute('aria-hidden', 'false');
+    } catch (err: unknown) {
+      const msg = err && typeof err === 'object' && 'message' in err
+        ? String((err as { message: string }).message)
+        : 'Error al publicar. Intenta nuevamente.';
+
+      // Si no hay sesión, redirigir a acceder
+      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 401) {
+        window.location.href = '/acceder';
+        return;
+      }
+
+      showSubmitError(msg);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Publicar reporte';
+    }
+  });
+
+  newBtn?.addEventListener('click', () => {
+    confirm.classList.remove('show');
+    confirm.setAttribute('aria-hidden', 'true');
+    form?.reset();
+    document.getElementById('rp-previews')!.innerHTML = '';
+    selectedFiles = [];
+    if (count) count.textContent = '0 / 600';
+    clearSubmitError();
+  });
+</script>

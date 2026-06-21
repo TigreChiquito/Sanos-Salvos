@@ -1,0 +1,14 @@
+---
+// src/pages/mapa.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NavbarApp  from '../components/NavbarApp.astro';
+import MapView    from '../components/MapView';
+---
+
+<BaseLayout
+  title="Mapa — Sanos & Salvos"
+  description="Explora el mapa de mascotas perdidas y encontradas cerca de ti."
+>
+  <NavbarApp active="mapa" />
+  <MapView client:only="react" />
+</BaseLayout>

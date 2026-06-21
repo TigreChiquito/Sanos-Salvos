@@ -1,0 +1,267 @@
+---
+// src/components/Hero.astro
+import Navbar from "./Navbar.astro";
+---
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay-1"></div>
+  <div class="hero-overlay-2"></div>
+
+  <Navbar />
+
+  <div class="hero-body">
+    <h1 class="hero-title">
+      Ninguna mascota<br />
+      debería perderse<br />
+      <em>para siempre.</em>
+    </h1>
+
+    <p class="hero-sub">
+      Reporta una mascota perdida o encontrada en segundos. Tu comunidad estará
+      lista para ayudarte a reunirlos.
+    </p>
+
+    <div class="hero-actions">
+      <a href="/reportar" class="btn btn-primary">🐾 Hacer un reporte</a>
+      <a href="#como-funciona" class="btn btn-ghost">¿Cómo funciona? →</a>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    width: 100%;
+    height: 100svh;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background-image: url("https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=1920&q=85&auto=format&fit=crop");
+    background-size: cover;
+    background-position: center 30%;
+    transform: scale(1.04);
+    animation: slowZoom 14s ease-out forwards;
+  }
+
+  .hero-overlay-1 {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      160deg,
+      rgba(20, 8, 3, 0.55) 0%,
+      rgba(196, 92, 58, 0.22) 50%,
+      rgba(20, 8, 3, 0.7) 100%
+    );
+  }
+  .hero-overlay-2 {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(15, 6, 2, 0.92) 0%,
+      rgba(15, 6, 2, 0.3) 40%,
+      transparent 70%
+    );
+  }
+
+  .hero-body {
+    position: relative;
+    z-index: 5;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 3rem 4.5rem;
+    max-width: 820px;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.38rem 1rem;
+    border-radius: 999px;
+    margin-bottom: 1.4rem;
+    width: fit-content;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+  .eyebrow-pulse {
+    width: 7px;
+    height: 7px;
+    background: #6ee76e;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(110, 231, 110, 0.6);
+    animation: pulse-green 2s infinite;
+  }
+
+  .hero-title {
+    font-family: "Fraunces", serif;
+    font-weight: 900;
+    font-size: clamp(2.8rem, 6.5vw, 5rem);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    color: white;
+    margin-bottom: 1.3rem;
+    animation: fadeUp 0.7s 0.35s ease both;
+  }
+  .hero-title em {
+    font-style: italic;
+    font-weight: 300;
+    color: #f0b89a;
+  }
+
+  .hero-sub {
+    font-size: clamp(1rem, 1.8vw, 1.15rem);
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.65;
+    max-width: 520px;
+    margin-bottom: 2.4rem;
+    animation: fadeUp 0.7s 0.5s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    animation: fadeUp 0.7s 0.65s ease both;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: "Nunito", sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 1rem 2rem;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.18s,
+      background 0.2s;
+  }
+  .btn:hover {
+    transform: translateY(-3px);
+  }
+
+  .btn-primary {
+    background: var(--terra);
+    color: white;
+    box-shadow: 0 4px 28px rgba(196, 92, 58, 0.5);
+  }
+  .btn-primary:hover {
+    background: #d4673f;
+    box-shadow: 0 8px 36px rgba(196, 92, 58, 0.6);
+  }
+
+  .btn-ghost {
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    border: 1.5px solid rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(10px);
+  }
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    right: 3rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    animation: fadeUp 1s 1.2s ease both;
+  }
+  .scroll-line {
+    width: 1px;
+    height: 48px;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.5),
+      transparent
+    );
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+
+  @media (max-width: 768px) {
+    .hero-body {
+      padding: 0 1.4rem 3rem;
+    }
+    .scroll-hint {
+      right: 1.4rem;
+    }
+  }
+
+  @keyframes slowZoom {
+    from {
+      transform: scale(1.04);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes pulse-green {
+    0% {
+      box-shadow: 0 0 0 0 rgba(110, 231, 110, 0.6);
+    }
+    70% {
+      box-shadow: 0 0 0 7px rgba(110, 231, 110, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(110, 231, 110, 0);
+    }
+  }
+  @keyframes scrollPulse {
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scaleY(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scaleY(1.15);
+    }
+  }
+</style>

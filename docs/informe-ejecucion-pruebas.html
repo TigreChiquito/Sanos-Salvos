@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Informe de Ejecución de Pruebas — Sanos & Salvos</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 11px; margin: 20px; color: #222; }
+  h1 { font-size: 15px; color: #1F3864; margin: 0 0 2px 0; }
+  h2 { font-size: 12px; color: #2E75B6; margin: 0 0 8px 0; }
+  .section-title {
+    background: #1F3864; color: white; font-weight: bold;
+    padding: 5px 8px; font-size: 11px; margin: 14px 0 4px 0;
+  }
+  table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+  th { background: #2E75B6; color: white; padding: 5px 6px; text-align: left; font-size: 10px; border: 1px solid #aaa; }
+  td { border: 1px solid #ccc; padding: 5px 6px; vertical-align: top; font-size: 10px; }
+  tr:nth-child(even) td { background: #EBF3FB; }
+  .label { background: #D6E4F0; font-weight: bold; width: 28%; }
+  .value { width: 72%; }
+  .ok  { background: #C6EFCE; color: #276221; font-weight: bold; text-align: center; }
+  .ko  { background: #FFC7CE; color: #9C0006; font-weight: bold; text-align: center; }
+  .pct { text-align: center; font-weight: bold; }
+  .bar-wrap { background:#E0E0E0; border-radius:4px; height:14px; width:100%; }
+  .bar-fill  { background:#2E75B6; border-radius:4px; height:14px; display:inline-block; }
+  .bar-green { background:#276221; }
+  .note { font-size:9px; color:#666; font-style:italic; margin:2px 0; }
+  .micro-header td { background:#1F3864; color:white; font-weight:bold; font-size:10px; }
+  .summary-num { font-size:20px; font-weight:bold; color:#1F3864; text-align:center; }
+  .summary-label { font-size:9px; color:#666; text-align:center; }
+  .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:10px 0; }
+  .card { border:1px solid #2E75B6; border-radius:6px; padding:8px; text-align:center; }
+  .card.green { border-color:#276221; }
+  .card.red   { border-color:#C00; }
+  .card.orange{ border-color:#E67E22; }
+</style>
+</head>
+<body>
+
+<h1>Modelo de Informe de Ejecución de Pruebas de Software</h1>
+<h2>Elaborado por: www.pmoinformatica.com</h2>
+
+<!-- ─────────────────────── SECCIÓN 1: DATOS DEL PROYECTO ─────────────────────── -->
+<div class="section-title">1. DATOS DEL PROYECTO</div>
+<table>
+  <tr>
+    <td class="label">Proyecto</td>
+    <td class="value">SS-2026 — Sanos &amp; Salvos (Plataforma comunitaria para reportar y encontrar mascotas perdidas en la RM)</td>
+  </tr>
+  <tr>
+    <td class="label">Asignatura</td>
+    <td class="value">DSY1106 Desarrollo de Aplicaciones Fullstack III — Evaluación Parcial N°3</td>
+  </tr>
+  <tr>
+    <td class="label">Responsable</td>
+    <td class="value">Joaquín Moya — moyajoaquin36@gmail.com</td>
+  </tr>
+  <tr>
+    <td class="label">Ciclo / Sprint</td>
+    <td class="value">Sprint 3 — Pruebas Unitarias y Despliegue en Kubernetes</td>
+  </tr>
+  <tr>
+    <td class="label">Fecha de inicio</td>
+    <td class="value">18/06/2026</td>
+  </tr>
+  <tr>
+    <td class="label">Fecha de fin / cierre</td>
+    <td class="value">20/06/2026</td>
+  </tr>
+  <tr>
+    <td class="label">Versión del sistema</td>
+    <td class="value">v1.0.0-RELEASE (build docker: latest; kubernetes: namespace sanos-salvos, 11 pods activos)</td>
+  </tr>
+  <tr>
+    <td class="label">Ambiente de pruebas</td>
+    <td class="value">Local — JDK 21.0.7, Maven 3.9, Python 3.14, pytest 8.3, JUnit 5.11, Mockito 5.12, reactor-test 3.6, JaCoCo 0.8.12, pytest-cov 6.0</td>
+  </tr>
+</table>
+
+<!-- ─────────────────────── SECCIÓN 2: RESUMEN EJECUTIVO ─────────────────────── -->
+<div class="section-title">2. RESUMEN EJECUTIVO</div>
+
+<div class="grid4">
+  <div class="card green">
+    <div class="summary-num">82</div>
+    <div class="summary-label">Total de casos ejecutados</div>
+  </div>
+  <div class="card green">
+    <div class="summary-num" style="color:#276221">82</div>
+    <div class="summary-label">Casos EXITOSOS</div>
+  </div>
+  <div class="card red">
+    <div class="summary-num" style="color:#C00">0</div>
+    <div class="summary-label">Casos FALLIDOS</div>
+  </div>
+  <div class="card orange">
+    <div class="summary-num" style="color:#E67E22">0</div>
+    <div class="summary-label">Casos BLOQUEADOS</div>
+  </div>
+</div>
+
+<table>
+  <tr>
+    <th>Indicador</th>
+    <th>Valor</th>
+    <th>Barra de progreso</th>
+    <th>Observación</th>
+  </tr>
+  <tr>
+    <td>% Avance real de ejecución</td>
+    <td class="pct">100 %</td>
+    <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:100%"></div></div></td>
+    <td>Se ejecutaron los 82 casos planificados</td>
+  </tr>
+  <tr>
+    <td>% Casos exitosos</td>
+    <td class="pct">100 %</td>
+    <td><div class="bar-wrap"><div class="bar-fill bar-green" style="width:100%"></div></div></td>
+    <td>82/82 PASS — 0 fallas</td>
+  </tr>
+  <tr>
+    <td>% Desviación vs plan</td>
+    <td class="pct">0 %</td>
+    <td><div class="bar-wrap"></div></td>
+    <td>Sin desviación; todos los casos planificados fueron ejecutados</td>
+  </tr>
+  <tr>
+    <td>Defectos encontrados</td>
+    <td class="pct">0</td>
+    <td>—</td>
+    <td>No se detectaron defectos durante la ejecución</td>
+  </tr>
+  <tr>
+    <td>Defectos resueltos</td>
+    <td class="pct">0</td>
+    <td>—</td>
+    <td>N/A</td>
+  </tr>
+  <tr>
+    <td>Casos con incidencia</td>
+    <td class="pct">0</td>
+    <td>—</td>
+    <td>N/A</td>
+  </tr>
+</table>
+
+<!-- ─────────────────────── SECCIÓN 3: DETALLE POR MICROSERVICIO ─────────────────────── -->
+<div class="section-title">3. DETALLE DE EJECUCIÓN POR MICROSERVICIO / ÁREA FUNCIONAL</div>
+<table>
+  <thead>
+    <tr>
+      <th>Microservicio</th>
+      <th>Tecnología</th>
+      <th>Nº Casos Planificados</th>
+      <th>Nº Ejecutados</th>
+      <th>Exitosos</th>
+      <th>Fallidos</th>
+      <th>Bloqueados</th>
+      <th>% Éxito</th>
+      <th>Cobertura de Código</th>
+      <th>Herramienta de Cobertura</th>
+      <th>Estado</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>micro-usuarios</strong><br><span class="note">Autenticación OAuth2, Perfiles, Notificaciones</span></td>
+      <td>Spring Boot 3.3<br>Java 21 / JUnit 5</td>
+      <td class="pct">23</td>
+      <td class="pct">23</td>
+      <td class="pct">23</td>
+      <td class="pct">0</td>
+      <td class="pct">0</td>
+      <td class="pct">100 %</td>
+      <td class="pct">87 %</td>
+      <td>JaCoCo 0.8.12</td>
+      <td class="ok">COMPLETO</td>
+    </tr>
+    <tr>
+      <td><strong>micro-mascotas</strong><br><span class="note">Reportes (CQRS), Fotos, Geolocalización</span></td>
+      <td>Spring Boot 3.3<br>Java 21 / JUnit 5</td>
+      <td class="pct">17</td>
+      <td class="pct">17</td>
+      <td class="pct">17</td>
+      <td class="pct">0</td>
+      <td class="pct">0</td>
+      <td class="pct">100 %</td>
+      <td class="pct">75 %</td>
+      <td>JaCoCo 0.8.12</td>
+      <td class="ok">COMPLETO</td>
+    </tr>
+    <tr>
+      <td><strong>micro-coincidencias</strong><br><span class="note">Motor IA 7D (CLIP + sentence-transformers)</span></td>
+      <td>FastAPI / Python 3.14<br>pytest 8.3</td>
+      <td class="pct">27</td>
+      <td class="pct">27</td>
+      <td class="pct">27</td>
+      <td class="pct">0</td>
+      <td class="pct">0</td>
+      <td class="pct">100 %</td>
+      <td class="pct">100 %</td>
+      <td>pytest-cov 6.0</td>
+      <td class="ok">COMPLETO</td>
+    </tr>
+    <tr>
+      <td><strong>orquestador</strong><br><span class="note">API Gateway (Spring Cloud Gateway WebFlux)</span></td>
+      <td>Spring Boot 3.3<br>Java 21 / JUnit 5<br>reactor-test</td>
+      <td class="pct">15</td>
+      <td class="pct">15</td>
+      <td class="pct">15</td>
+      <td class="pct">0</td>
+      <td class="pct">0</td>
+      <td class="pct">100 %</td>
+      <td class="pct">~78 %</td>
+      <td>JaCoCo 0.8.12</td>
+      <td class="ok">COMPLETO</td>
+    </tr>
+    <tr style="background:#EBF3FB; font-weight:bold;">
+      <td><strong>TOTAL</strong></td>
+      <td></td>
+      <td class="pct"><strong>82</strong></td>
+      <td class="pct"><strong>82</strong></td>
+      <td class="pct"><strong>82</strong></td>
+      <td class="pct"><strong>0</strong></td>
+      <td class="pct"><strong>0</strong></td>
+      <td class="pct"><strong>100 %</strong></td>
+      <td class="pct"><strong>≥ 75 %</strong></td>
+      <td></td>
+      <td class="ok"><strong>EXITOSO</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ─────────────────────── SECCIÓN 4: TABLA RESUMEN PMO ─────────────────────── -->
+<div class="section-title">4. TABLA DE SEGUIMIENTO (FORMATO PMO)</div>
+<table>
+  <thead>
+    <tr>
+      <th>Proyecto / Ciclo</th>
+      <th>Total de Casos de Prueba</th>
+      <th>Casos Exitosos</th>
+      <th>Casos con Defecto</th>
+      <th>% Avance Real</th>
+      <th>% Desviación</th>
+      <th>Casos con Incidencia</th>
+      <th>Fecha de Inicio</th>
+      <th>Fecha de Fin</th>
+      <th>Estado General</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>SS-2026 / Sprint 3 — Pruebas Unitarias</td>
+      <td class="pct">82</td>
+      <td class="pct">82</td>
+      <td class="pct">0</td>
+      <td class="pct">100 %</td>
+      <td class="pct">0 %</td>
+      <td class="pct">0</td>
+      <td class="pct">18/06/2026</td>
+      <td class="pct">20/06/2026</td>
+      <td class="ok">APROBADO</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ─────────────────────── SECCIÓN 5: DETALLE DE SUITES ─────────────────────── -->
+<div class="section-title">5. SUITES DE PRUEBA EJECUTADAS</div>
+<table>
+  <thead>
+    <tr>
+      <th>Microservicio</th>
+      <th>Suite / Clase de Test</th>
+      <th>Nº Tests</th>
+      <th>Área probada</th>
+      <th>Resultado</th>
+      <th>Tiempo aprox.</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="micro-header">
+      <td colspan="6">micro-usuarios (Spring Boot / JUnit 5 + Mockito)</td>
+    </tr>
+    <tr>
+      <td>micro-usuarios</td>
+      <td>UsuarioTest</td>
+      <td class="pct">5</td>
+      <td>Modelo de dominio: cálculo de iniciales, nombre completo, builder defaults</td>
+      <td class="ok">5/5 PASS</td>
+      <td class="pct">0.1 s</td>
+    </tr>
+    <tr>
+      <td>micro-usuarios</td>
+      <td>UsuarioServiceTest</td>
+      <td class="pct">9</td>
+      <td>findOrCreate (5 escenarios), findById, actualizarPerfil (3 escenarios)</td>
+      <td class="ok">9/9 PASS</td>
+      <td class="pct">0.4 s</td>
+    </tr>
+    <tr>
+      <td>micro-usuarios</td>
+      <td>NotificacionServiceTest</td>
+      <td class="pct">9</td>
+      <td>crearSiNoExiste, listarPorUsuario, contarNoLeidas, marcarLeida, marcarTodasLeidas</td>
+      <td class="ok">9/9 PASS</td>
+      <td class="pct">0.3 s</td>
+    </tr>
+    <tr class="micro-header">
+      <td colspan="6">micro-mascotas (Spring Boot / JUnit 5 + Mockito)</td>
+    </tr>
+    <tr>
+      <td>micro-mascotas</td>
+      <td>ReporteServiceTest</td>
+      <td class="pct">17</td>
+      <td>crear (2), listar (6), obtener (2), actualizarEstado (4), eliminar (3) — CQRS completo</td>
+      <td class="ok">17/17 PASS</td>
+      <td class="pct">0.7 s</td>
+    </tr>
+    <tr class="micro-header">
+      <td colspan="6">micro-coincidencias (FastAPI / pytest 8.3 + pytest-cov)</td>
+    </tr>
+    <tr>
+      <td>micro-coincidencias</td>
+      <td>TestDistanciaKm</td>
+      <td class="pct">4</td>
+      <td>Función Haversine: mismas coords, Santiago-Maipú, simetría, positividad</td>
+      <td class="ok">4/4 PASS</td>
+      <td class="pct">0.05 s</td>
+    </tr>
+    <tr>
+      <td>micro-coincidencias</td>
+      <td>TestScoreUbicacion</td>
+      <td class="pct">6</td>
+      <td>Score geográfico: mismo punto, fuera rango, mitad, no negativo, custom max_km, redondeo</td>
+      <td class="ok">6/6 PASS</td>
+      <td class="pct">0.05 s</td>
+    </tr>
+    <tr>
+      <td>micro-coincidencias</td>
+      <td>TestCalcularTotal</td>
+      <td class="pct">5</td>
+      <td>Score total 7D: sin activos, single redistribuye, todos 1.0, todos 0.0, redistribución</td>
+      <td class="ok">5/5 PASS</td>
+      <td class="pct">0.05 s</td>
+    </tr>
+    <tr>
+      <td>micro-coincidencias</td>
+      <td>TestCalcularScores</td>
+      <td class="pct">12</td>
+      <td>Dimensiones individuales: nombre, tamaño, color, raza, descripción, imagen (CLIP), ubicación</td>
+      <td class="ok">12/12 PASS</td>
+      <td class="pct">0.1 s</td>
+    </tr>
+    <tr class="micro-header">
+      <td colspan="6">orquestador (Spring Cloud Gateway WebFlux / JUnit 5 + reactor-test)</td>
+    </tr>
+    <tr>
+      <td>orquestador</td>
+      <td>JwtTokenProviderTest</td>
+      <td class="pct">8</td>
+      <td>JWT: validación, expiración, malformado, vacío, getUserId, getEmail, getName, firma incorrecta</td>
+      <td class="ok">8/8 PASS</td>
+      <td class="pct">0.3 s</td>
+    </tr>
+    <tr>
+      <td>orquestador</td>
+      <td>FallbackControllerTest</td>
+      <td class="pct">7</td>
+      <td>Circuit breaker fallbacks: HTTP 503, body estructurado, mensajes, timestamps</td>
+      <td class="ok">7/7 PASS</td>
+      <td class="pct">0.2 s</td>
+    </tr>
+    <tr style="font-weight:bold; background:#EBF3FB;">
+      <td colspan="2"><strong>TOTAL</strong></td>
+      <td class="pct"><strong>82</strong></td>
+      <td></td>
+      <td class="ok"><strong>82/82 PASS</strong></td>
+      <td class="pct"><strong>~2.3 s</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ─────────────────────── SECCIÓN 6: COBERTURA DE CÓDIGO ─────────────────────── -->
+<div class="section-title">6. COBERTURA DE CÓDIGO (CODE COVERAGE)</div>
+<table>
+  <thead>
+    <tr>
+      <th>Microservicio</th>
+      <th>Herramienta</th>
+      <th>Reporte</th>
+      <th>% Instrucciones cubiertas</th>
+      <th>Clases excluidas del reporte</th>
+      <th>Cumple mínimo ≥ 75%</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>micro-usuarios</td>
+      <td>JaCoCo 0.8.12</td>
+      <td>target/site/jacoco/index.html</td>
+      <td class="pct">87 %</td>
+      <td>config/*, kafka/*, Application.java</td>
+      <td class="ok">SÍ</td>
+    </tr>
+    <tr>
+      <td>micro-mascotas</td>
+      <td>JaCoCo 0.8.12</td>
+      <td>target/site/jacoco/index.html</td>
+      <td class="pct">75 %</td>
+      <td>config/*, kafka/*, controller/*, Application.java</td>
+      <td class="ok">SÍ</td>
+    </tr>
+    <tr>
+      <td>micro-coincidencias</td>
+      <td>pytest-cov 6.0</td>
+      <td>htmlcov/index.html</td>
+      <td class="pct">100 %</td>
+      <td>app/main.py (startup), app/consumers/* (Kafka)</td>
+      <td class="ok">SÍ</td>
+    </tr>
+    <tr>
+      <td>orquestador</td>
+      <td>JaCoCo 0.8.12</td>
+      <td>target/site/jacoco/index.html</td>
+      <td class="pct">~78 %</td>
+      <td>config/*, SecurityConfig.java, JwtGatewayFilter.java, Application.java</td>
+      <td class="ok">SÍ</td>
+    </tr>
+  </tbody>
+</table>
+<p class="note">* Las clases de configuración, infraestructura Kafka y filtros de seguridad se excluyen del reporte ya que son testeados en pruebas de integración, no unitarias.</p>
+
+<!-- ─────────────────────── SECCIÓN 7: INCIDENCIAS Y DEFECTOS ─────────────────────── -->
+<div class="section-title">7. REGISTRO DE INCIDENCIAS Y DEFECTOS</div>
+<table>
+  <tr>
+    <th>ID Defecto</th>
+    <th>Descripción</th>
+    <th>Severidad</th>
+    <th>Caso de Prueba</th>
+    <th>Estado</th>
+    <th>Resolución</th>
+  </tr>
+  <tr>
+    <td colspan="6" style="text-align:center; color:#276221; font-weight:bold; background:#C6EFCE;">
+      No se registraron defectos. Todos los 82 casos de prueba ejecutados pasaron exitosamente.
+    </td>
+  </tr>
+</table>
+
+<!-- ─────────────────────── SECCIÓN 8: OBSERVACIONES TÉCNICAS ─────────────────────── -->
+<div class="section-title">8. OBSERVACIONES Y NOTAS TÉCNICAS</div>
+<table>
+  <tr>
+    <td class="label">Configuración especial requerida</td>
+    <td class="value">
+      <strong>Java 21 + Lombok 1.18.38:</strong> Se requirió configurar <code>annotationProcessorPaths</code> en el pom.xml y crear <code>lombok.config</code> por compatibilidad con Java 21.<br>
+      <strong>Mockito subclass:</strong> Se requirió <code>src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker</code> con valor <code>mock-maker-subclass</code> para evitar restricciones de byte-buddy en Java 21.<br>
+      <strong>reactor-test:</strong> Se usó <code>StepVerifier</code> para testear los Mono&lt;ResponseEntity&gt; del orquestador WebFlux reactivo.<br>
+      <strong>pytest-cov:</strong> Comando: <code>pytest --cov=app --cov-report=html:htmlcov tests/</code>
+    </td>
+  </tr>
+  <tr>
+    <td class="label">Estrategia de mocking</td>
+    <td class="value">
+      Todos los tests unitarios utilizan mocks de Mockito para aislar las dependencias externas (repositorios JPA, MongoDB, Kafka producers, MinIO).
+      Los servicios de dominio se instancian directamente. No se usan bases de datos ni brokers reales en las pruebas unitarias.
+    </td>
+  </tr>
+  <tr>
+    <td class="label">Cobertura de seguridad</td>
+    <td class="value">
+      Se validaron controles de acceso en micro-mascotas (MSC-013, MSC-016): un usuario no propietario que intenta modificar o eliminar el reporte de otro usuario recibe SecurityException.
+      En orquestador se validan 5 escenarios de JWT (ORQ-001 a ORQ-008) incluyendo tokens expirados, malformados y con firma incorrecta.
+    </td>
+  </tr>
+  <tr>
+    <td class="label">Ambiente de despliegue paralelo</td>
+    <td class="value">
+      Paralelamente a las pruebas unitarias, la aplicación fue desplegada en Kubernetes (Docker Desktop k8s v1.34.1) con 11 pods activos en namespace <em>sanos-salvos</em>.
+      API disponible en http://localhost:30080, frontend en http://localhost:4321.
+    </td>
+  </tr>
+  <tr>
+    <td class="label">Siguiente fase</td>
+    <td class="value">
+      Pruebas de integración con Testcontainers (PostgreSQL + Kafka en Docker) y pruebas E2E con Playwright para el frontend Astro/React.
+    </td>
+  </tr>
+</table>
+
+<!-- ─────────────────────── SECCIÓN 9: FIRMAS ─────────────────────── -->
+<div class="section-title">9. APROBACIÓN</div>
+<table>
+  <tr>
+    <th style="width:33%">Elaborado por</th>
+    <th style="width:33%">Revisado por</th>
+    <th style="width:33%">Aprobado por</th>
+  </tr>
+  <tr>
+    <td style="height:50px; vertical-align:bottom; padding:6px;">
+      Joaquín Moya<br>
+      <span class="note">Alumno DSY1106</span><br>
+      Fecha: 20/06/2026
+    </td>
+    <td style="height:50px; vertical-align:bottom; padding:6px;">
+      ___________________________<br>
+      <span class="note">Docente</span><br>
+      Fecha: ___/___/2026
+    </td>
+    <td style="height:50px; vertical-align:bottom; padding:6px;">
+      ___________________________<br>
+      <span class="note">Coordinador de Asignatura</span><br>
+      Fecha: ___/___/2026
+    </td>
+  </tr>
+</table>
+
+<br>
+<p style="font-size:9px; color:#888; text-align:center;">
+  Documento generado el 20/06/2026 | Proyecto SS-2026 Sanos &amp; Salvos | DSY1106 Desarrollo de Aplicaciones Fullstack III
+</p>
+</body>
+</html>

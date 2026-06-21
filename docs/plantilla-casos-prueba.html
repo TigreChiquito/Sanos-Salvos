@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Plantilla de Casos de Pruebas — Sanos & Salvos</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 10px; margin: 20px; }
+  h1 { font-size: 14px; color: #1F3864; margin:0; }
+  h2 { font-size: 11px; color: #2E75B6; margin:2px 0 0 0; }
+  .meta { font-size: 10px; margin: 4px 0 10px 0; color: #333; }
+  table { border-collapse: collapse; width: 100%; }
+  th { background-color: #1F3864; color: white; padding: 5px 4px; text-align: center; font-size: 9px; border: 1px solid #ccc; }
+  th.seguimiento { background-color: #2E75B6; }
+  td { border: 1px solid #ccc; padding: 4px; vertical-align: top; font-size: 9px; }
+  tr:nth-child(even) { background-color: #EBF3FB; }
+  .estado-ok { background-color: #C6EFCE; color: #276221; font-weight: bold; text-align: center; }
+  .micro { background-color: #D6E4F0; font-weight: bold; color: #1F3864; font-size: 9px; }
+</style>
+</head>
+<body>
+<h1>Plantilla de Casos de Pruebas de Software</h1>
+<h2>Elaborado por: www.pmoinformatica.com</h2>
+<p class="meta">
+  <strong>Proyecto:</strong> SS-2026 — Sanos &amp; Salvos (Plataforma de Mascotas Perdidas/Encontradas)<br>
+  <strong>Ciclo de Pruebas:</strong> Pruebas Unitarias — Evaluación Parcial N°3 DSY1106 Desarrollo Fullstack III<br>
+  <strong>Alumno:</strong> Joaquín Moya &nbsp;|&nbsp; <strong>Fecha:</strong> 20/06/2026
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Id</th>
+      <th>Caso de Prueba</th>
+      <th>Descripción</th>
+      <th>Fecha</th>
+      <th>Área Funcional / Sub proceso</th>
+      <th>Funcionalidad / Característica</th>
+      <th>Datos / Acciones de Entrada</th>
+      <th>Resultado Esperado</th>
+      <th>Requerimientos de Ambiente de Pruebas</th>
+      <th>Procedimientos especiales requeridos</th>
+      <th>Dependencias con otros casos de Prueba</th>
+      <th class="seguimiento">Resultado Obtenido</th>
+      <th class="seguimiento">Estado</th>
+      <th class="seguimiento">Última Fecha de Estado</th>
+      <th class="seguimiento">Observaciones</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- ═══════════════════ MICRO-USUARIOS ═══════════════════ -->
+    <tr><td colspan="15" class="micro">MICRO-USUARIOS — Gestión de Usuarios (Spring Boot 3.3 / Java 21 / JUnit 5 + Mockito)</td></tr>
+
+    <!-- Usuario Model -->
+    <tr>
+      <td>USR-001</td>
+      <td>Iniciales con nombre y apellido</td>
+      <td>Verifica que getInitials() retorna las iniciales en mayúscula cuando el usuario tiene nombre y apellido</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Modelo de Dominio</td>
+      <td>Cálculo de Iniciales de Usuario</td>
+      <td>Usuario con nombre="Juan", apellido="Pérez"</td>
+      <td>Retorna "JP"</td>
+      <td>JDK 21, Maven 3.9, sin BD requerida</td>
+      <td>Ninguno</td>
+      <td>Ninguna</td>
+      <td>Retorna "JP"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Test puro de modelo, sin dependencias externas</td>
+    </tr>
+    <tr>
+      <td>USR-002</td>
+      <td>Iniciales solo con nombre</td>
+      <td>Verifica que getInitials() retorna solo la inicial del nombre cuando el apellido está vacío</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Modelo de Dominio</td>
+      <td>Cálculo de Iniciales de Usuario</td>
+      <td>Usuario con nombre="Ana", apellido=""</td>
+      <td>Retorna "A"</td>
+      <td>JDK 21, Maven 3.9, sin BD requerida</td>
+      <td>Ninguno</td>
+      <td>USR-001</td>
+      <td>Retorna "A"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-003</td>
+      <td>Iniciales con nombre y apellido vacíos</td>
+      <td>Verifica que getInitials() retorna "?" cuando nombre y apellido están vacíos</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Modelo de Dominio</td>
+      <td>Cálculo de Iniciales de Usuario</td>
+      <td>Usuario con nombre="", apellido=""</td>
+      <td>Retorna "?"</td>
+      <td>JDK 21, Maven 3.9, sin BD requerida</td>
+      <td>Ninguno</td>
+      <td>USR-001</td>
+      <td>Retorna "?"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Caso borde de usuario sin datos</td>
+    </tr>
+    <tr>
+      <td>USR-004</td>
+      <td>Nombre completo concatenado</td>
+      <td>Verifica que getNombreCompleto() retorna nombre + espacio + apellido</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Modelo de Dominio</td>
+      <td>Presentación de Nombre de Usuario</td>
+      <td>Usuario con nombre="María", apellido="González"</td>
+      <td>Retorna "María González"</td>
+      <td>JDK 21, Maven 3.9</td>
+      <td>Ninguno</td>
+      <td>Ninguna</td>
+      <td>Retorna "María González"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-005</td>
+      <td>Builder crea usuario con valores por defecto correctos</td>
+      <td>Verifica que al crear un usuario con @Builder los campos activo, notifEmail y notifSistema son true</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Modelo de Dominio</td>
+      <td>Creación de Usuario con Valores Predeterminados</td>
+      <td>Usuario creado con Lombok @Builder sin especificar activo/notifEmail/notifSistema</td>
+      <td>activo=true, notifEmail=true, notifSistema=true</td>
+      <td>JDK 21, Maven 3.9, Lombok 1.18.38</td>
+      <td>Requiere Lombok correctamente configurado con annotationProcessorPaths</td>
+      <td>Ninguna</td>
+      <td>activo=true, notifEmail=true, notifSistema=true</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Valida que los defaults de Lombok se aplican correctamente</td>
+    </tr>
+
+    <!-- UsuarioService -->
+    <tr>
+      <td>USR-006</td>
+      <td>findOrCreate crea usuario nuevo</td>
+      <td>Cuando el usuario no existe en BD, findOrCreate debe guardarlo y publicar evento Kafka</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Usuarios</td>
+      <td>Registro / Autenticación OAuth2 Google</td>
+      <td>googleId que no existe en repositorio; datos OAuth2 con nombre, email y foto</td>
+      <td>Se llama save() una vez, se publica evento Kafka, se retorna el usuario guardado</td>
+      <td>JDK 21, Mockito 5 (mock-maker-subclass), sin BD real</td>
+      <td>Mock de UsuarioRepository y UsuarioEventProducer requerido</td>
+      <td>Ninguna</td>
+      <td>save() invocado 1 vez, publishUsuarioEvent() invocado 1 vez</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-007</td>
+      <td>findOrCreate retorna usuario existente sin cambios</td>
+      <td>Cuando el usuario ya existe y sus datos no cambiaron, no debe guardarse ni publicar evento</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Usuarios</td>
+      <td>Registro / Autenticación OAuth2 Google</td>
+      <td>googleId que ya existe con mismo nombre y foto</td>
+      <td>No se llama save(), no se publica evento, retorna el mismo usuario</td>
+      <td>JDK 21, Mockito 5, sin BD real</td>
+      <td>Mock de UsuarioRepository retorna Optional con usuario existente</td>
+      <td>USR-006</td>
+      <td>save() invocado 0 veces, publishUsuarioEvent() invocado 0 veces</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Valida idempotencia del login</td>
+    </tr>
+    <tr>
+      <td>USR-008</td>
+      <td>findOrCreate actualiza nombre si cambió</td>
+      <td>Cuando el usuario existe pero su nombre cambió en Google, debe actualizarse y publicar evento</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Usuarios</td>
+      <td>Actualización de Perfil por OAuth2</td>
+      <td>Usuario existente con nombre="Juan", nuevo nombre="Juan Carlos"</td>
+      <td>Se llama save() una vez con nombre actualizado, se publica evento</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock de UsuarioRepository con findByGoogleId retornando usuario previo</td>
+      <td>USR-006, USR-007</td>
+      <td>save() invocado 1 vez con nombre="Juan Carlos"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-009</td>
+      <td>findOrCreate actualiza foto si cambió</td>
+      <td>Cuando el usuario existe pero su foto de perfil cambió, debe actualizarse</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Usuarios</td>
+      <td>Actualización de Perfil por OAuth2</td>
+      <td>Usuario existente con foto antigua, OAuth2 provee nueva URL de foto</td>
+      <td>Se guarda usuario con nueva foto, se publica evento</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno especial</td>
+      <td>USR-006</td>
+      <td>save() con nueva URL de foto</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-010</td>
+      <td>findOrCreate con nombre null usa string vacío</td>
+      <td>Si OAuth2 no provee nombre, debe usarse string vacío en lugar de null</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Usuarios</td>
+      <td>Validación de Datos OAuth2</td>
+      <td>Atributos OAuth2 sin nombre (null)</td>
+      <td>Usuario guardado con nombre="" (no null)</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>USR-006</td>
+      <td>nombre="" en el usuario guardado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Caso borde de atributos OAuth2 incompletos</td>
+    </tr>
+    <tr>
+      <td>USR-011</td>
+      <td>findById delega en repositorio</td>
+      <td>findById debe retornar el Optional que devuelva el repositorio</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Usuarios</td>
+      <td>Consulta de Usuario por ID</td>
+      <td>UUID de usuario existente</td>
+      <td>Retorna Optional con el usuario correspondiente</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock de UsuarioRepository.findById</td>
+      <td>Ninguna</td>
+      <td>Optional con usuario retornado correctamente</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-012</td>
+      <td>actualizarPerfil actualiza campos editables</td>
+      <td>actualizarPerfil debe actualizar telefono, notifEmail y notifSistema del usuario encontrado</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Usuarios</td>
+      <td>Actualización de Perfil de Usuario</td>
+      <td>UUID existente, DTO con telefono="+56912345678", notifEmail=false, notifSistema=true</td>
+      <td>Retorna Optional con usuario actualizado con los nuevos valores</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock de UsuarioRepository.findById retornando usuario existente</td>
+      <td>USR-011</td>
+      <td>Optional con telefono="+56912345678", notifEmail=false</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-013</td>
+      <td>actualizarPerfil convierte teléfono en blanco a null</td>
+      <td>Si el DTO tiene teléfono vacío o solo espacios, debe guardarse como null</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Usuarios</td>
+      <td>Actualización de Perfil de Usuario</td>
+      <td>DTO con telefono="   " (espacios)</td>
+      <td>Usuario guardado con telefono=null</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>USR-012</td>
+      <td>telefono=null en usuario guardado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Limpieza de datos de entrada</td>
+    </tr>
+    <tr>
+      <td>USR-014</td>
+      <td>actualizarPerfil retorna vacío si usuario no existe</td>
+      <td>Si el UUID no corresponde a ningún usuario, debe retornar Optional.empty()</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Usuarios</td>
+      <td>Actualización de Perfil de Usuario</td>
+      <td>UUID que no existe en repositorio</td>
+      <td>Retorna Optional.empty()</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock de UsuarioRepository.findById retornando Optional.empty()</td>
+      <td>USR-012</td>
+      <td>Optional.empty() retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+
+    <!-- NotificacionService -->
+    <tr>
+      <td>USR-015</td>
+      <td>crearSiNoExiste guarda notificación nueva</td>
+      <td>Cuando no existe una notificación igual, debe crearse y guardarse</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Notificaciones</td>
+      <td>Creación de Notificaciones</td>
+      <td>UUID de usuario, coincidencia_id, tipo="nueva_coincidencia", mensaje</td>
+      <td>Se llama save() con la nueva notificación</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock de NotificacionRepository</td>
+      <td>USR-006</td>
+      <td>save() invocado 1 vez</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-016</td>
+      <td>crearSiNoExiste no duplica notificación existente</td>
+      <td>Si ya existe la misma notificación, no debe volver a guardarse</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Notificaciones</td>
+      <td>Creación de Notificaciones</td>
+      <td>Notificación que ya existe en repositorio</td>
+      <td>No se llama save()</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock retorna notificación existente en existsByUsuarioIdAndCoincidenciaId</td>
+      <td>USR-015</td>
+      <td>save() invocado 0 veces</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Evita spam de notificaciones duplicadas</td>
+    </tr>
+    <tr>
+      <td>USR-017</td>
+      <td>listarPorUsuario retorna DTOs correctos</td>
+      <td>listarPorUsuario debe convertir entidades Notificacion a NotificacionDto</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Notificaciones</td>
+      <td>Listado de Notificaciones por Usuario</td>
+      <td>UUID de usuario con 2 notificaciones en BD</td>
+      <td>Lista con 2 DTOs con id, mensaje, tipo y estado leida</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock de NotificacionRepository.findByUsuarioIdOrderByCreatedAtDesc</td>
+      <td>Ninguna</td>
+      <td>Lista de 2 NotificacionDto retornada correctamente</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-018</td>
+      <td>listarPorUsuario retorna lista vacía</td>
+      <td>Si el usuario no tiene notificaciones, debe retornar lista vacía (no null)</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Notificaciones</td>
+      <td>Listado de Notificaciones por Usuario</td>
+      <td>UUID de usuario sin notificaciones</td>
+      <td>Lista vacía []</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>USR-017</td>
+      <td>Lista vacía retornada</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-019</td>
+      <td>contarNoLeidas delega en repositorio</td>
+      <td>contarNoLeidas debe retornar el conteo de notificaciones no leídas del repositorio</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Notificaciones</td>
+      <td>Conteo de Notificaciones No Leídas</td>
+      <td>UUID de usuario con 3 notificaciones no leídas</td>
+      <td>Retorna 3</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>Ninguna</td>
+      <td>Retorna 3</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-020</td>
+      <td>marcarLeida marca notificación correcta del usuario</td>
+      <td>marcarLeida debe encontrar la notificación del usuario y marcarla como leída</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Notificaciones</td>
+      <td>Marcado de Notificación como Leída</td>
+      <td>ID de notificación existente, UUID de usuario propietario</td>
+      <td>Retorna Optional con notificación con leida=true</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>USR-017</td>
+      <td>Optional con notificación.leida=true</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-021</td>
+      <td>marcarLeida rechaza acceso de usuario incorrecto</td>
+      <td>marcarLeida no debe marcar notificación que pertenece a otro usuario</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Notificaciones</td>
+      <td>Marcado de Notificación como Leída</td>
+      <td>ID de notificación de usuario A, UUID de usuario B diferente</td>
+      <td>Retorna Optional.empty()</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>USR-020</td>
+      <td>Optional.empty() retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Control de acceso entre usuarios</td>
+    </tr>
+    <tr>
+      <td>USR-022</td>
+      <td>marcarLeida retorna vacío si notificación no existe</td>
+      <td>Si el ID de notificación no existe en BD, debe retornar Optional.empty()</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Notificaciones</td>
+      <td>Marcado de Notificación como Leída</td>
+      <td>ID de notificación inexistente</td>
+      <td>Retorna Optional.empty()</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>USR-020</td>
+      <td>Optional.empty() retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>USR-023</td>
+      <td>marcarTodasLeidas delega en repositorio</td>
+      <td>marcarTodasLeidas debe llamar al método del repositorio con el UUID correcto</td>
+      <td>20/06/2026</td>
+      <td>micro-usuarios / Servicio de Notificaciones</td>
+      <td>Marcado Masivo de Notificaciones</td>
+      <td>UUID de usuario</td>
+      <td>Se llama markAllAsRead(usuarioId) en el repositorio</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>USR-020</td>
+      <td>markAllAsRead() invocado con UUID correcto</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+
+    <!-- ═══════════════════ MICRO-MASCOTAS ═══════════════════ -->
+    <tr><td colspan="15" class="micro">MICRO-MASCOTAS — Gestión de Reportes (Spring Boot 3.3 / Java 21 / JUnit 5 + Mockito + CQRS)</td></tr>
+
+    <tr>
+      <td>MSC-001</td>
+      <td>crear reporte sin fotos</td>
+      <td>crear() debe persistir el reporte en PostgreSQL y MongoDB, y publicar evento Kafka sin fotos</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Creación de Reporte de Mascota</td>
+      <td>DTO con tipo="perdido", animal="perro", lat=-33.45, lng=-70.65; multipart sin archivos</td>
+      <td>ReporteDto con id generado, save() llamado en PostgreSQL y MongoDB, evento publicado</td>
+      <td>JDK 21, Mockito 5, sin BD real ni MinIO</td>
+      <td>Mocks de ReporteRepository, FotoRepository, ReporteMongoRepository, MinioService, ReporteEventProducer</td>
+      <td>Ninguna</td>
+      <td>ReporteDto retornado con id; save() y publishReporteCreated() invocados</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>CQRS: escritura PostgreSQL + lectura MongoDB sincronizados</td>
+    </tr>
+    <tr>
+      <td>MSC-002</td>
+      <td>crear reporte con fotos null</td>
+      <td>crear() debe funcionar correctamente cuando el campo fotos es null (sin NPE)</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Creación de Reporte de Mascota</td>
+      <td>DTO válido; fotos=null en la request</td>
+      <td>Reporte creado sin fotos, sin NullPointerException</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno especial</td>
+      <td>MSC-001</td>
+      <td>Reporte guardado correctamente, 0 fotos asociadas</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Caso borde: fotos opcionales</td>
+    </tr>
+    <tr>
+      <td>MSC-003</td>
+      <td>listar sin filtros retorna todos los reportes</td>
+      <td>listar() sin parámetros debe devolver todos los reportes activos del MongoDB</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Listado de Reportes (Mapa)</td>
+      <td>Llamada sin tipo, animal ni bounds</td>
+      <td>Lista con todos los reportes activos del modelo de lectura MongoDB</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock de ReporteMongoRepository</td>
+      <td>MSC-001</td>
+      <td>Lista completa de reportes retornada</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>CQRS: query side via MongoDB</td>
+    </tr>
+    <tr>
+      <td>MSC-004</td>
+      <td>listar con filtro de tipo</td>
+      <td>listar() con tipo="perdido" debe filtrar solo reportes de ese tipo</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Filtrado de Reportes por Tipo</td>
+      <td>tipo="perdido", sin otros filtros</td>
+      <td>Solo reportes con tipo="perdido"</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>MSC-003</td>
+      <td>Lista filtrada solo por tipo="perdido"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>MSC-005</td>
+      <td>listar con filtro de animal</td>
+      <td>listar() con animal="gato" debe filtrar correctamente</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Filtrado de Reportes por Animal</td>
+      <td>animal="gato"</td>
+      <td>Solo reportes de gatos</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>MSC-003</td>
+      <td>Lista con solo reportes de gatos</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>MSC-006</td>
+      <td>listar con filtro combinado tipo + animal</td>
+      <td>listar() con tipo="encontrado" y animal="perro" combina ambos filtros</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Filtrado Combinado de Reportes</td>
+      <td>tipo="encontrado", animal="perro"</td>
+      <td>Solo reportes de perros encontrados</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>MSC-004, MSC-005</td>
+      <td>Lista con solo perros encontrados</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>MSC-007</td>
+      <td>listar con filtro geográfico bounds</td>
+      <td>listar() con bounds filtra por área geográfica (lat/lng min y max)</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Filtrado Geográfico de Reportes</td>
+      <td>latMin=-33.5, latMax=-33.4, lngMin=-70.7, lngMax=-70.6</td>
+      <td>Solo reportes dentro del área geográfica indicada</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock de ReporteMongoRepository con query geográfico</td>
+      <td>MSC-003</td>
+      <td>Lista de reportes dentro del área indicada</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Funcionalidad clave del mapa interactivo</td>
+    </tr>
+    <tr>
+      <td>MSC-008</td>
+      <td>listar convierte documentos MongoDB a DTOs</td>
+      <td>listar() debe convertir correctamente ReporteDocument a ReporteDto</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Transformación de Datos MongoDB a DTO</td>
+      <td>ReporteDocument con todos los campos completos</td>
+      <td>ReporteDto con los mismos valores mapeados</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>MSC-003</td>
+      <td>DTO con todos los campos mapeados correctamente</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>MSC-009</td>
+      <td>obtener reporte existente</td>
+      <td>obtener() con UUID válido debe retornar el reporte desde PostgreSQL</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Consulta de Reporte por ID</td>
+      <td>UUID de reporte existente en PostgreSQL</td>
+      <td>Optional con ReporteDto del reporte encontrado</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock de ReporteRepository.findById</td>
+      <td>MSC-001</td>
+      <td>Optional con ReporteDto correcto</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>MSC-010</td>
+      <td>obtener reporte inexistente retorna vacío</td>
+      <td>obtener() con UUID que no existe debe retornar Optional.empty()</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Consulta de Reporte por ID</td>
+      <td>UUID que no existe en PostgreSQL</td>
+      <td>Optional.empty()</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>MSC-009</td>
+      <td>Optional.empty() retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>MSC-011</td>
+      <td>actualizarEstado a resuelto por propietario publica evento resolved</td>
+      <td>El propietario puede cambiar estado a "resuelto" y se publica evento Kafka de resolución</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Actualización de Estado de Reporte</td>
+      <td>UUID reporte, usuario_id=propietario, nuevo estado="resuelto"</td>
+      <td>Estado actualizado a "resuelto", publishReporteResolved() invocado</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock con reporte cuyo usuarioId coincide con el usuario autenticado</td>
+      <td>MSC-001</td>
+      <td>estado="resuelto" guardado, evento resolved publicado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>MSC-012</td>
+      <td>actualizarEstado a otro estado publica evento updated</td>
+      <td>El propietario cambia a estado distinto de resuelto, se publica evento de actualización genérico</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Actualización de Estado de Reporte</td>
+      <td>UUID reporte, propietario, nuevo estado="activo"</td>
+      <td>publishReporteUpdated() invocado (no resolved)</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>MSC-011</td>
+      <td>publishReporteUpdated() invocado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>MSC-013</td>
+      <td>actualizarEstado por no propietario lanza SecurityException</td>
+      <td>Un usuario que no es el propietario no puede cambiar el estado del reporte</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Control de Acceso en Reportes</td>
+      <td>UUID reporte de usuario A, intento de usuario B diferente</td>
+      <td>SecurityException lanzada</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Mock con usuarioId del reporte distinto al usuario solicitante</td>
+      <td>MSC-011</td>
+      <td>SecurityException lanzada correctamente</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Seguridad crítica: sin esto cualquier usuario podría modificar reportes ajenos</td>
+    </tr>
+    <tr>
+      <td>MSC-014</td>
+      <td>actualizarEstado retorna vacío si reporte no existe</td>
+      <td>Si el reporte no existe, debe retornar Optional.empty()</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Actualización de Estado de Reporte</td>
+      <td>UUID inexistente</td>
+      <td>Optional.empty()</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>MSC-009</td>
+      <td>Optional.empty() retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>MSC-015</td>
+      <td>eliminar reporte por propietario</td>
+      <td>El propietario puede eliminar su propio reporte; retorna true</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Eliminación de Reporte</td>
+      <td>UUID reporte, usuario_id=propietario</td>
+      <td>delete() invocado, retorna true</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>MSC-001</td>
+      <td>delete() invocado, retorna true</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>MSC-016</td>
+      <td>eliminar reporte por no propietario lanza SecurityException</td>
+      <td>Un usuario que no es propietario no puede eliminar el reporte</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Control de Acceso en Eliminación</td>
+      <td>UUID reporte de usuario A, eliminación por usuario B</td>
+      <td>SecurityException lanzada</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>MSC-015, MSC-013</td>
+      <td>SecurityException lanzada</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>MSC-017</td>
+      <td>eliminar reporte inexistente retorna false</td>
+      <td>Si el reporte no existe, eliminar() retorna false sin lanzar excepción</td>
+      <td>20/06/2026</td>
+      <td>micro-mascotas / Servicio de Reportes</td>
+      <td>Eliminación de Reporte</td>
+      <td>UUID que no existe</td>
+      <td>Retorna false</td>
+      <td>JDK 21, Mockito 5</td>
+      <td>Ninguno</td>
+      <td>MSC-015</td>
+      <td>false retornado, sin excepción</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+
+    <!-- ═══════════════════ MICRO-COINCIDENCIAS ═══════════════════ -->
+    <tr><td colspan="15" class="micro">MICRO-COINCIDENCIAS — Motor de Matching IA (FastAPI / Python 3.14 / pytest 8.3 + pytest-cov)</td></tr>
+
+    <tr>
+      <td>COI-001</td>
+      <td>distanciaKm mismas coordenadas retorna 0</td>
+      <td>La distancia Haversine entre un punto y sí mismo debe ser 0 km</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Geolocalización</td>
+      <td>Cálculo de Distancia Haversine</td>
+      <td>lat1=-33.45, lng1=-70.65, lat2=-33.45, lng2=-70.65</td>
+      <td>0.0 km</td>
+      <td>Python 3.14, pytest, sin servicios externos</td>
+      <td>Ninguno</td>
+      <td>Ninguna</td>
+      <td>0.0 km retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>COI-002</td>
+      <td>distanciaKm Santiago-Maipú retorna distancia conocida</td>
+      <td>La distancia entre el centro de Santiago y Maipú debe ser aproximadamente 12 km</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Geolocalización</td>
+      <td>Cálculo de Distancia Haversine</td>
+      <td>Coordenadas de Plaza de Armas y centro de Maipú</td>
+      <td>Distancia entre 10 y 15 km</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>COI-001</td>
+      <td>~12.3 km retornado (dentro del rango)</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Validación con distancia geográfica real</td>
+    </tr>
+    <tr>
+      <td>COI-003</td>
+      <td>distanciaKm es simétrica</td>
+      <td>La distancia de A a B debe ser igual a la distancia de B a A</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Geolocalización</td>
+      <td>Cálculo de Distancia Haversine</td>
+      <td>Dos pares de coordenadas en orden inverso</td>
+      <td>distancia(A,B) == distancia(B,A)</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>COI-001</td>
+      <td>Distancias iguales en ambos sentidos</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>COI-004</td>
+      <td>distanciaKm siempre positiva</td>
+      <td>La función Haversine debe retornar siempre un valor ≥ 0</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Geolocalización</td>
+      <td>Cálculo de Distancia Haversine</td>
+      <td>Coordenadas aleatorias en la RM</td>
+      <td>Distancia ≥ 0</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>COI-001</td>
+      <td>Valor positivo retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>COI-005</td>
+      <td>scoreUbicacion mismo punto retorna 1.0</td>
+      <td>Si los dos reportes están en el mismo punto, el score de ubicación es máximo (1.0)</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Score de Ubicación Geográfica (15% del total)</td>
+      <td>lat/lng idénticos en ambos reportes, max_km=10.0</td>
+      <td>score_ubicacion=1.0</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>COI-001</td>
+      <td>1.0 retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>COI-006</td>
+      <td>scoreUbicacion fuera de rango retorna 0.0</td>
+      <td>Si los reportes están a más de max_km de distancia, el score de ubicación es 0.0</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Score de Ubicación Geográfica (15% del total)</td>
+      <td>Reportes separados por 50 km, max_km=10.0</td>
+      <td>score_ubicacion=0.0</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>COI-005</td>
+      <td>0.0 retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Radio máximo configurable por MAX_DISTANCIA_KM env var</td>
+    </tr>
+    <tr>
+      <td>COI-007</td>
+      <td>calcularTotal sin scores activos retorna 0</td>
+      <td>Si todos los scores de dimensión son None, el total debe ser 0</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Cálculo de Score Total 7D</td>
+      <td>Diccionario de scores con todos los valores en None</td>
+      <td>score_total=0.0</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>Ninguna</td>
+      <td>0.0 retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>COI-008</td>
+      <td>calcularTotal todos en 1.0 retorna 1.0</td>
+      <td>Si todos los scores de las 7 dimensiones son 1.0, el total debe ser 1.0</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Cálculo de Score Total 7D</td>
+      <td>Scores: raza=1.0, desc=1.0, color=1.0, tamano=1.0, nombre=1.0, ubicacion=1.0, imagen=1.0</td>
+      <td>score_total=1.0</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>COI-007</td>
+      <td>1.0 retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>COI-009</td>
+      <td>calcularTotal redistribuye pesos con dimensión sin datos</td>
+      <td>Cuando una dimensión no tiene datos (None), su peso se redistribuye entre las activas</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Redistribución de Pesos 7D</td>
+      <td>Solo score de raza=1.0, resto None</td>
+      <td>score_total=1.0 (todo el peso concentrado en raza)</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>COI-007</td>
+      <td>1.0 retornado con redistribución correcta</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Algoritmo clave: si no hay foto disponible, el 10% de imagen se redistribuye</td>
+    </tr>
+    <tr>
+      <td>COI-010</td>
+      <td>calcularScores nombres iguales retorna 1.0</td>
+      <td>Si ambos reportes tienen el mismo nombre de mascota, score_nombre debe ser 1.0</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Score por Dimensión — Nombre</td>
+      <td>nombre_perdido="Firulais", nombre_encontrado="Firulais"</td>
+      <td>score_nombre=1.0</td>
+      <td>Python 3.14, pytest, rapidfuzz</td>
+      <td>Librería rapidfuzz instalada</td>
+      <td>Ninguna</td>
+      <td>1.0 retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>COI-011</td>
+      <td>calcularScores ambos nombres None retorna None</td>
+      <td>Si ambos reportes no tienen nombre, score_nombre debe ser None (no contar)</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Score por Dimensión — Nombre</td>
+      <td>nombre_perdido=None, nombre_encontrado=None</td>
+      <td>score_nombre=None</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>COI-010</td>
+      <td>None retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>None activa redistribución de pesos</td>
+    </tr>
+    <tr>
+      <td>COI-012</td>
+      <td>calcularScores tamaño igual retorna 1.0</td>
+      <td>Si ambos reportes indican el mismo tamaño de mascota, score_tamano=1.0</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Score por Dimensión — Tamaño</td>
+      <td>tamano="mediano" en ambos reportes</td>
+      <td>score_tamano=1.0</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>Ninguna</td>
+      <td>1.0 retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>COI-013</td>
+      <td>calcularScores tamaño diferente retorna 0.0</td>
+      <td>Si los tamaños son distintos, score_tamano=0.0</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Score por Dimensión — Tamaño</td>
+      <td>tamano_perdido="pequeño", tamano_encontrado="grande"</td>
+      <td>score_tamano=0.0</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>COI-012</td>
+      <td>0.0 retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>COI-014</td>
+      <td>calcularScores con embeddings CLIP similitud coseno</td>
+      <td>Con embeddings idénticos (simulados), la similitud coseno debe retornar 1.0</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Score de Imagen por CLIP ViT-B/32 (10% del total)</td>
+      <td>embedding_perdido=[1,0,0], embedding_encontrado=[1,0,0]</td>
+      <td>score_imagen=1.0</td>
+      <td>Python 3.14, pytest, numpy</td>
+      <td>Ninguno (embeddings mockeados, no se usa GPU)</td>
+      <td>Ninguna</td>
+      <td>1.0 retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>El modelo CLIP real genera embeddings de 512 dimensiones</td>
+    </tr>
+    <tr>
+      <td>COI-015</td>
+      <td>calcularScores embeddings ortogonales retorna similitud 0.0</td>
+      <td>Con embeddings ortogonales, la similitud coseno debe ser 0.0</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Score de Imagen por CLIP ViT-B/32 (10% del total)</td>
+      <td>embedding_perdido=[1,0], embedding_encontrado=[0,1]</td>
+      <td>score_imagen=0.0</td>
+      <td>Python 3.14, pytest, numpy</td>
+      <td>Ninguno</td>
+      <td>COI-014</td>
+      <td>0.0 retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>COI-016</td>
+      <td>resultado contiene todas las dimensiones del scoring</td>
+      <td>calcularScores debe retornar un diccionario con las 7 claves de dimensión</td>
+      <td>20/06/2026</td>
+      <td>micro-coincidencias / Motor de Scoring</td>
+      <td>Estructura del Resultado de Scoring 7D</td>
+      <td>Dos reportes completos con todos los campos</td>
+      <td>Diccionario con claves: nombre, raza, color, tamano, descripcion, ubicacion, imagen</td>
+      <td>Python 3.14, pytest</td>
+      <td>Ninguno</td>
+      <td>COI-007</td>
+      <td>Diccionario con las 7 claves retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+
+    <!-- ═══════════════════ ORQUESTADOR ═══════════════════ -->
+    <tr><td colspan="15" class="micro">ORQUESTADOR — API Gateway (Spring Cloud Gateway WebFlux / JUnit 5 + Reactor Test)</td></tr>
+
+    <tr>
+      <td>ORQ-001</td>
+      <td>validateToken con JWT válido retorna true</td>
+      <td>Un JWT correctamente firmado y no expirado debe ser validado exitosamente</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Seguridad JWT</td>
+      <td>Validación de Token JWT</td>
+      <td>JWT generado con secret correcto, expiración en 60 seg</td>
+      <td>validateToken() retorna true</td>
+      <td>JDK 21, jjwt 0.12.5</td>
+      <td>Ninguno (JWT generado en el propio test)</td>
+      <td>Ninguna</td>
+      <td>true retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>ORQ-002</td>
+      <td>validateToken con JWT expirado retorna false</td>
+      <td>Un JWT cuya fecha de expiración ya pasó debe ser rechazado</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Seguridad JWT</td>
+      <td>Validación de Token JWT Expirado</td>
+      <td>JWT con expiration=-1000ms (ya expirado)</td>
+      <td>validateToken() retorna false</td>
+      <td>JDK 21, jjwt 0.12.5</td>
+      <td>Ninguno</td>
+      <td>ORQ-001</td>
+      <td>false retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Previene uso de sesiones vencidas</td>
+    </tr>
+    <tr>
+      <td>ORQ-003</td>
+      <td>validateToken con JWT malformado retorna false</td>
+      <td>Un string que no es un JWT válido debe ser rechazado sin lanzar excepción</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Seguridad JWT</td>
+      <td>Validación de Token JWT Malformado</td>
+      <td>String "esto.no.es.un.jwt"</td>
+      <td>validateToken() retorna false (no lanza excepción)</td>
+      <td>JDK 21, jjwt 0.12.5</td>
+      <td>Ninguno</td>
+      <td>ORQ-001</td>
+      <td>false retornado sin excepción</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>ORQ-004</td>
+      <td>validateToken con token vacío retorna false</td>
+      <td>String vacío como token debe retornar false</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Seguridad JWT</td>
+      <td>Validación de Token JWT</td>
+      <td>String "" (vacío)</td>
+      <td>false retornado</td>
+      <td>JDK 21, jjwt 0.12.5</td>
+      <td>Ninguno</td>
+      <td>ORQ-001</td>
+      <td>false retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>ORQ-005</td>
+      <td>getUserId extrae UUID del subject del token</td>
+      <td>getUserId debe retornar el UUID del subject del JWT</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Seguridad JWT</td>
+      <td>Extracción de Claims JWT</td>
+      <td>JWT con subject=UUID aleatorio</td>
+      <td>Retorna el mismo UUID del subject</td>
+      <td>JDK 21, jjwt 0.12.5</td>
+      <td>Ninguno</td>
+      <td>ORQ-001</td>
+      <td>UUID correcto retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>ORQ-006</td>
+      <td>getEmail extrae email del claim del token</td>
+      <td>getEmail debe retornar el claim "email" del JWT</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Seguridad JWT</td>
+      <td>Extracción de Claims JWT</td>
+      <td>JWT con claim email="joaquin@mail.com"</td>
+      <td>Retorna "joaquin@mail.com"</td>
+      <td>JDK 21, jjwt 0.12.5</td>
+      <td>Ninguno</td>
+      <td>ORQ-001</td>
+      <td>"joaquin@mail.com" retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>ORQ-007</td>
+      <td>getName extrae nombre del claim del token</td>
+      <td>getName debe retornar el claim "name" del JWT</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Seguridad JWT</td>
+      <td>Extracción de Claims JWT</td>
+      <td>JWT con claim name="Joaquín Moya"</td>
+      <td>Retorna "Joaquín Moya"</td>
+      <td>JDK 21, jjwt 0.12.5</td>
+      <td>Ninguno</td>
+      <td>ORQ-001</td>
+      <td>"Joaquín Moya" retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>ORQ-008</td>
+      <td>validateToken con firma diferente retorna false</td>
+      <td>JWT firmado con clave distinta al secret configurado debe ser rechazado</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Seguridad JWT</td>
+      <td>Validación de Firma JWT</td>
+      <td>JWT firmado con secret="otra-clave-diferente"</td>
+      <td>false retornado</td>
+      <td>JDK 21, jjwt 0.12.5</td>
+      <td>Ninguno</td>
+      <td>ORQ-001</td>
+      <td>false retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Previene tokens falsificados</td>
+    </tr>
+    <tr>
+      <td>ORQ-009</td>
+      <td>fallbackUsuarios retorna 503 con datos correctos</td>
+      <td>El endpoint de fallback para micro-usuarios retorna 503 con body estructurado</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Circuit Breaker Fallback</td>
+      <td>Respuesta Fallback micro-usuarios</td>
+      <td>Invocación directa de fallbackUsuarios()</td>
+      <td>HTTP 503, body con error, servicio, mensaje y timestamp</td>
+      <td>JDK 21, reactor-test, Project Reactor</td>
+      <td>Requiere StepVerifier de reactor-test</td>
+      <td>Ninguna</td>
+      <td>HTTP 503 con body correcto retornado</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>ORQ-010</td>
+      <td>fallbackMascotas retorna 503</td>
+      <td>El endpoint de fallback para micro-mascotas retorna 503 con servicio="micro-mascotas"</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Circuit Breaker Fallback</td>
+      <td>Respuesta Fallback micro-mascotas</td>
+      <td>Invocación directa de fallbackMascotas()</td>
+      <td>HTTP 503, servicio="micro-mascotas"</td>
+      <td>JDK 21, reactor-test</td>
+      <td>Ninguno</td>
+      <td>ORQ-009</td>
+      <td>HTTP 503 con servicio="micro-mascotas"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>ORQ-011</td>
+      <td>fallbackCoincidencias retorna 503</td>
+      <td>El endpoint de fallback para micro-coincidencias retorna 503</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Circuit Breaker Fallback</td>
+      <td>Respuesta Fallback micro-coincidencias</td>
+      <td>Invocación directa de fallbackCoincidencias()</td>
+      <td>HTTP 503, servicio="micro-coincidencias"</td>
+      <td>JDK 21, reactor-test</td>
+      <td>Ninguno</td>
+      <td>ORQ-009</td>
+      <td>HTTP 503 con servicio="micro-coincidencias"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>ORQ-012</td>
+      <td>fallbackUsuarios mensaje contiene "autenticación"</td>
+      <td>El mensaje del fallback de usuarios debe hacer referencia al servicio de autenticación</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Circuit Breaker Fallback</td>
+      <td>Calidad de Mensaje de Fallback</td>
+      <td>Body del fallback de usuarios</td>
+      <td>Campo "mensaje" contiene la palabra "autenticación"</td>
+      <td>JDK 21, reactor-test</td>
+      <td>Ninguno</td>
+      <td>ORQ-009</td>
+      <td>Mensaje contiene "autenticación"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>UX: mensajes de error descriptivos para el frontend</td>
+    </tr>
+    <tr>
+      <td>ORQ-013</td>
+      <td>fallbackMascotas mensaje contiene "reportes"</td>
+      <td>El mensaje del fallback de mascotas menciona el servicio de reportes</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Circuit Breaker Fallback</td>
+      <td>Calidad de Mensaje de Fallback</td>
+      <td>Body del fallback de mascotas</td>
+      <td>Campo "mensaje" contiene "reportes"</td>
+      <td>JDK 21, reactor-test</td>
+      <td>Ninguno</td>
+      <td>ORQ-010</td>
+      <td>Mensaje contiene "reportes"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>ORQ-014</td>
+      <td>fallbackCoincidencias mensaje contiene "motor"</td>
+      <td>El mensaje del fallback de coincidencias menciona el motor de matching</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Circuit Breaker Fallback</td>
+      <td>Calidad de Mensaje de Fallback</td>
+      <td>Body del fallback de coincidencias</td>
+      <td>Campo "mensaje" contiene "motor"</td>
+      <td>JDK 21, reactor-test</td>
+      <td>Ninguno</td>
+      <td>ORQ-011</td>
+      <td>Mensaje contiene "motor"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>ORQ-015</td>
+      <td>todos los fallbacks incluyen timestamp</td>
+      <td>Los 3 endpoints de fallback deben incluir timestamp en el body para trazabilidad</td>
+      <td>20/06/2026</td>
+      <td>orquestador / Circuit Breaker Fallback</td>
+      <td>Trazabilidad en Respuestas Fallback</td>
+      <td>Body de los 3 fallbacks</td>
+      <td>Los 3 bodies contienen la clave "timestamp"</td>
+      <td>JDK 21, reactor-test</td>
+      <td>Ninguno</td>
+      <td>ORQ-009, ORQ-010, ORQ-011</td>
+      <td>Los 3 bodies contienen "timestamp"</td>
+      <td class="estado-ok">EXITOSO</td>
+      <td>20/06/2026</td>
+      <td>Facilita debugging y logs en producción</td>
+    </tr>
+
+  </tbody>
+</table>
+
+<br>
+<p style="font-size:10px; color:#666;">
+  <strong>Resumen:</strong> 82 casos de prueba ejecutados | 82 exitosos | 0 fallidos | 0 bloqueados | 0 pendientes<br>
+  <strong>Cobertura:</strong> micro-usuarios 87% | micro-mascotas 75% | micro-coincidencias 100% | orquestador ~78%<br>
+  Generado: 20/06/2026
+</p>
+</body>
+</html>

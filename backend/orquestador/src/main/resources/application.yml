@@ -1,0 +1,210 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: orquestador
+
+  # ── Spring Cloud Gateway ────────────────────────────────────
+  cloud:
+    gateway:
+
+      # Configuración global de timeouts
+      httpclient:
+        connect-timeout: 5000   # ms
+        response-timeout: 30s
+
+      # Rutas — cada una apunta a un microservicio con su Circuit Breaker
+      routes:
+
+        # ── Auth y Usuarios (Micro 1) ──────────────────────────
+        # OAuth2 redirect flow — sin CircuitBreaker (los 302 no son compatibles con él)
+        - id: oauth2-route
+          uri: http://micro-usuarios:8081
+          predicates:
+            - Path=/oauth2/**, /login/oauth2/**
+
+        # Rutas de auth (login/me/logout) — JWT validado en el gateway
+        - id: auth-route
+          uri: http://micro-usuarios:8081
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: usuariosCircuitBreaker
+                fallbackUri: forward:/fallback/usuarios
+
+        # Perfil de usuarios internos
+        - id: usuarios-route
+          uri: http://micro-usuarios:8081
+          predicates:
+            - Path=/api/usuarios/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: usuariosCircuitBreaker
+                fallbackUri: forward:/fallback/usuarios
+
+        # ── Mascotas / Reportes (Micro 2) ─────────────────────
+        - id: reportes-route
+          uri: http://micro-mascotas:8082
+          predicates:
+            - Path=/api/reportes/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: mascotasCircuitBreaker
+                fallbackUri: forward:/fallback/mascotas
+            # Preservar el prefijo tal cual (no reescribir la ruta)
+
+        # ── Motor de Coincidencias (Micro 3) ──────────────────
+        - id: coincidencias-route
+          uri: http://micro-coincidencias:8084
+          predicates:
+            - Path=/api/coincidencias/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: coincidenciasCircuitBreaker
+                fallbackUri: forward:/fallback/coincidencias
+
+        # ── Proxy de API docs para Swagger UI agregado ────────
+        - id: docs-usuarios
+          uri: http://micro-usuarios:8081
+          predicates:
+            - Path=/api-docs/usuarios
+          filters:
+            - RewritePath=/api-docs/usuarios, /api-docs
+
+        - id: docs-mascotas
+          uri: http://micro-mascotas:8082
+          predicates:
+            - Path=/api-docs/mascotas
+          filters:
+            - RewritePath=/api-docs/mascotas, /api-docs
+
+        - id: docs-coincidencias
+          uri: http://micro-coincidencias:8084
+          predicates:
+            - Path=/api-docs/coincidencias
+          filters:
+            - RewritePath=/api-docs/coincidencias, /openapi.json
+
+      # Filtros globales aplicados a todas las rutas
+      default-filters:
+        # Reintenta en caso de error de conexión (no en errores 4xx/5xx del micro)
+        - name: Retry
+          args:
+            retries: 2
+            methods: GET
+            series: SERVER_ERROR
+            exceptions:
+              - java.io.IOException
+              - java.util.concurrent.TimeoutException
+
+  # ── Security ──────────────────────────────────────────────────
+  security:
+    # Spring Security WebFlux está configurado en SecurityConfig.java
+    # Aquí solo desactivamos el form login por defecto
+    oauth2:
+      resourceserver:
+        jwt:
+          # No usamos Resource Server de Spring; validamos el JWT manualmente
+          # en el JwtGatewayFilter para mayor control
+          jwk-set-uri: ""
+
+# ── Resilience4j — Circuit Breaker ─────────────────────────────
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        # Ventana deslizante de 10 llamadas
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        # Abrir el circuito si ≥50% de las llamadas fallan
+        failure-rate-threshold: 50
+        # Tiempo en estado OPEN antes de pasar a HALF_OPEN
+        wait-duration-in-open-state: 15s
+        # Llamadas de prueba en estado HALF_OPEN
+        permitted-number-of-calls-in-half-open-state: 3
+        # Qué excepciones cuentan como fallo
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.cloud.gateway.support.NotFoundException
+    instances:
+      usuariosCircuitBreaker:
+        base-config: default
+      mascotasCircuitBreaker:
+        base-config: default
+      coincidenciasCircuitBreaker:
+        base-config: default
+        # ML puede tardar más — umbral más tolerante
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 30s
+
+  timelimiter:
+    instances:
+      usuariosCircuitBreaker:
+        timeout-duration: 5s
+      mascotasCircuitBreaker:
+        # Más tiempo por subida de fotos (multipart)
+        timeout-duration: 15s
+      coincidenciasCircuitBreaker:
+        # Inferencia ML puede tardar hasta 30s
+        timeout-duration: 30s
+
+# ── Actuator ──────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, circuitbreakers, circuitbreakerevents, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
+  metrics:
+    tags:
+      application: orquestador
+
+# ── Configuración propia ───────────────────────────────────────
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-change-in-production-min-32-chars}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+  cors:
+    allowed-origins: ${FRONTEND_URL:http://localhost:4321}
+
+  # Rutas que NO requieren JWT (públicas) — comma-separated para compatibilidad con @Value
+  public-paths: /oauth2/**,/login/oauth2/**,/api/auth/logout,/fallback/**,/actuator/health,/actuator/prometheus,/actuator/metrics/**,/swagger-ui/**,/api-docs/**
+
+# ── Swagger ───────────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    # Agrega los docs de los micros en el UI del gateway
+    urls:
+      - name: orquestador
+        url: /api-docs
+      - name: micro-usuarios
+        url: /api-docs/usuarios
+      - name: micro-mascotas
+        url: /api-docs/mascotas
+      - name: micro-coincidencias
+        url: /api-docs/coincidencias
+
+# ── Logging ───────────────────────────────────────────────────
+logging:
+  level:
+    cl.sanosysalvos: DEBUG
+    org.springframework.cloud.gateway: INFO
+    io.github.resilience4j: INFO

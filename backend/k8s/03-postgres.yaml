@@ -1,0 +1,208 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: sanos-salvos
+data:
+  01-schema.sql: |
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "vector";
+
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        nombre          VARCHAR(100)         NOT NULL,
+        apellido        VARCHAR(100)         NOT NULL,
+        email           VARCHAR(255) UNIQUE  NOT NULL,
+        google_id       VARCHAR(255) UNIQUE  NOT NULL,
+        foto_perfil_url TEXT,
+        telefono        VARCHAR(20),
+        notif_email     BOOLEAN              NOT NULL DEFAULT TRUE,
+        notif_sistema   BOOLEAN              NOT NULL DEFAULT TRUE,
+        activo          BOOLEAN              DEFAULT TRUE,
+        created_at      TIMESTAMPTZ          DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ          DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS reportes (
+        id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tipo        VARCHAR(20)  NOT NULL CHECK (tipo IN ('perdido', 'encontrado')),
+        animal      VARCHAR(20)  NOT NULL CHECK (animal IN ('perro', 'gato', 'otro')),
+        estado      VARCHAR(20)  NOT NULL DEFAULT 'activo'
+                        CHECK (estado IN ('activo', 'resuelto', 'eliminado')),
+        nombre      VARCHAR(100),
+        raza        VARCHAR(100),
+        color       VARCHAR(100),
+        tamano      VARCHAR(20)  CHECK (tamano IN ('pequeño', 'mediano', 'grande')),
+        descripcion TEXT,
+        lat         DECIMAL(10, 8) NOT NULL,
+        lng         DECIMAL(11, 8) NOT NULL,
+        zona        VARCHAR(255),
+        embedding   vector(512),
+        usuario_id  UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+        created_at  TIMESTAMPTZ DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS fotos (
+        id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        reporte_id  UUID    NOT NULL REFERENCES reportes(id) ON DELETE CASCADE,
+        url         TEXT    NOT NULL,
+        bucket_key  TEXT    NOT NULL,
+        orden       INTEGER DEFAULT 0,
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS coincidencias (
+        id                      UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        reporte_perdido_id      UUID NOT NULL REFERENCES reportes(id) ON DELETE CASCADE,
+        reporte_encontrado_id   UUID NOT NULL REFERENCES reportes(id) ON DELETE CASCADE,
+        score_total             DECIMAL(5, 4) NOT NULL,
+        score_nombre            DECIMAL(5, 4),
+        score_raza              DECIMAL(5, 4),
+        score_color             DECIMAL(5, 4),
+        score_tamano            DECIMAL(5, 4),
+        score_descripcion       DECIMAL(5, 4),
+        score_ubicacion         DECIMAL(5, 4),
+        score_imagen            DECIMAL(5, 4),
+        estado                  VARCHAR(20) DEFAULT 'pendiente'
+                                    CHECK (estado IN ('pendiente', 'confirmado', 'descartado')),
+        notificado_perdido      BOOLEAN DEFAULT FALSE,
+        notificado_encontrado   BOOLEAN DEFAULT FALSE,
+        created_at              TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (reporte_perdido_id, reporte_encontrado_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS notificaciones (
+        id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        usuario_id      UUID    NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+        coincidencia_id UUID    REFERENCES coincidencias(id) ON DELETE SET NULL,
+        tipo            VARCHAR(50)  NOT NULL,
+        mensaje         TEXT         NOT NULL,
+        leida           BOOLEAN      DEFAULT FALSE,
+        created_at      TIMESTAMPTZ  DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_reportes_tipo       ON reportes(tipo);
+    CREATE INDEX IF NOT EXISTS idx_reportes_animal     ON reportes(animal);
+    CREATE INDEX IF NOT EXISTS idx_reportes_estado     ON reportes(estado);
+    CREATE INDEX IF NOT EXISTS idx_reportes_usuario    ON reportes(usuario_id);
+    CREATE INDEX IF NOT EXISTS idx_reportes_ubicacion  ON reportes(lat, lng);
+    CREATE INDEX IF NOT EXISTS idx_reportes_created    ON reportes(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_reportes_embedding
+        ON reportes USING ivfflat (embedding vector_cosine_ops)
+        WITH (lists = 100);
+    CREATE INDEX IF NOT EXISTS idx_fotos_reporte ON fotos(reporte_id);
+    CREATE INDEX IF NOT EXISTS idx_coincidencias_perdido    ON coincidencias(reporte_perdido_id);
+    CREATE INDEX IF NOT EXISTS idx_coincidencias_encontrado ON coincidencias(reporte_encontrado_id);
+    CREATE INDEX IF NOT EXISTS idx_coincidencias_score      ON coincidencias(score_total DESC);
+    CREATE INDEX IF NOT EXISTS idx_notificaciones_usuario
+        ON notificaciones(usuario_id, leida, created_at DESC);
+
+    CREATE OR REPLACE FUNCTION fn_set_updated_at()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW.updated_at = NOW();
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    CREATE TRIGGER trg_usuarios_updated_at
+        BEFORE UPDATE ON usuarios
+        FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+
+    CREATE TRIGGER trg_reportes_updated_at
+        BEFORE UPDATE ON reportes
+        FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+
+    DO $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_publication WHERE pubname = 'ss_publication'
+        ) THEN
+            CREATE PUBLICATION ss_publication FOR TABLE
+                usuarios, reportes, fotos, coincidencias, notificaciones;
+        END IF;
+    END $$;
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: sanos-salvos
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg16
+          command:
+            - postgres
+            - -c
+            - wal_level=logical
+            - -c
+            - max_replication_slots=10
+            - -c
+            - max_wal_senders=10
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: POSTGRES_PASSWORD
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready"]
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 10
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init-sql
+          configMap:
+            name: postgres-init-sql
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: sanos-salvos
+spec:
+  selector:14
+  
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP

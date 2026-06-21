@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: micro-mascotas
+  namespace: sanos-salvos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: micro-mascotas
+  template:
+    metadata:
+      labels:
+        app: micro-mascotas
+    spec:
+      containers:
+        - name: micro-mascotas
+          image: ss-micro-mascotas:latest
+          imagePullPolicy: Never
+          env:
+            - name: POSTGRES_URL
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: POSTGRES_URL_JDBC
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: POSTGRES_PASSWORD
+            - name: MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: MONGO_URL
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka:9092
+            - name: MINIO_ENDPOINT
+              value: http://minio:9000
+            - name: MINIO_PUBLIC_URL
+              value: http://localhost:9000
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: MINIO_ROOT_PASSWORD
+            - name: MINIO_BUCKET_FOTOS
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: MINIO_BUCKET_FOTOS
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ss-secrets
+                  key: JWT_SECRET
+            - name: FRONTEND_URL
+              value: http://localhost:4321
+          ports:
+            - containerPort: 8082
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: micro-mascotas
+  namespace: sanos-salvos
+spec:
+  selector:
+    app: micro-mascotas
+  ports:
+    - port: 8082
+      targetPort: 8082
+  type: ClusterIP
