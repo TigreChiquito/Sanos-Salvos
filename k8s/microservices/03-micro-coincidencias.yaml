@@ -31,7 +31,7 @@ spec:
             - name: MINIO_INTERNAL_URL
               value: http://minio:9000
             - name: MATCH_THRESHOLD
-              value: "0.60"
+              value: "0.80"
             - name: MAX_DISTANCIA_KM
               value: "10.0"
             - name: DEBUG

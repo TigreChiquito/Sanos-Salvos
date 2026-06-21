@@ -10,9 +10,13 @@ Dimensiones y pesos base:
   raza        → 20%  (fuzzy match, importante para identificar la especie)
   color       → 15%  (fuzzy partial match)
   tamano      → 10%  (match exacto binario)
-  descripcion → 20%  (similitud de embeddings de texto)
+  descripcion → 20%  (similitud coseno de embeddings de TEXTO puro, 768D)
   ubicacion   → 15%  (distancia geográfica inversa)
-  imagen      → 10%  (similitud coseno de embeddings CLIP)
+  imagen      → 10%  (similitud coseno de embeddings CLIP de la foto, 512D)
+
+Los embeddings de descripción e imagen son independientes:
+  - emb_texto  : paraphrase-multilingual-mpnet-base-v2 (768D) sobre nombre+raza+color+desc
+  - emb_imagen : CLIP ViT-B/32 (512D) sobre la foto principal del reporte
 """
 import logging
 from typing import Optional
@@ -47,7 +51,8 @@ def calcular_scores(
     descripcion_a: Optional[str],
     lat_a: float,
     lng_a: float,
-    embedding_a: Optional[np.ndarray],
+    emb_texto_a: Optional[np.ndarray],   # 768D — embedding de texto puro
+    emb_imagen_a: Optional[np.ndarray],  # 512D — embedding CLIP de imagen
     # Reporte B (ej: encontrado)
     nombre_b: Optional[str],
     raza_b: Optional[str],
@@ -56,10 +61,13 @@ def calcular_scores(
     descripcion_b: Optional[str],
     lat_b: float,
     lng_b: float,
-    embedding_b: Optional[np.ndarray],
+    emb_texto_b: Optional[np.ndarray],   # 768D — embedding de texto puro
+    emb_imagen_b: Optional[np.ndarray],  # 512D — embedding CLIP de imagen
 ) -> dict:
     """
     Calcula los scores individuales por dimensión entre dos reportes.
+    Usa embeddings separados: emb_texto (768D) para la dimensión descripción
+    y emb_imagen (512D, CLIP) para la dimensión imagen.
     Retorna un dict con claves de PESOS + 'total'.
     """
     scores: dict[str, Optional[float]] = {}
@@ -94,12 +102,11 @@ def calcular_scores(
     else:
         scores["tamano"] = None
 
-    # ── Descripción (coseno entre embeddings de texto) ────────
-    # Los embeddings ya incluyen la descripción; se comparan directamente
-    if embedding_a is not None and embedding_b is not None:
+    # ── Descripción (coseno entre embeddings de TEXTO puro) ───
+    if emb_texto_a is not None and emb_texto_b is not None:
         sim = cosine_similarity(
-            embedding_a.reshape(1, -1),
-            embedding_b.reshape(1, -1)
+            emb_texto_a.reshape(1, -1),
+            emb_texto_b.reshape(1, -1)
         )[0][0]
         scores["descripcion"] = round(float(sim), 4)
     else:
@@ -108,12 +115,11 @@ def calcular_scores(
     # ── Ubicación ─────────────────────────────────────────────
     scores["ubicacion"] = geo_score(lat_a, lng_a, lat_b, lng_b, settings.max_distancia_km)
 
-    # ── Imagen (coseno del embedding combinado texto+imagen) ──
-    # Reutiliza el mismo embedding combinado; ya incorpora la imagen
-    if embedding_a is not None and embedding_b is not None:
+    # ── Imagen (coseno entre embeddings CLIP de fotos) ────────
+    if emb_imagen_a is not None and emb_imagen_b is not None:
         sim = cosine_similarity(
-            embedding_a.reshape(1, -1),
-            embedding_b.reshape(1, -1)
+            emb_imagen_a.reshape(1, -1),
+            emb_imagen_b.reshape(1, -1)
         )[0][0]
         scores["imagen"] = round(float(sim), 4)
     else:

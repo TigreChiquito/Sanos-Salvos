@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # ── Motor de Coincidencias ────────────────────────────────
     # Score mínimo para considerar un match válido
-    match_threshold: float = 0.60
+    match_threshold: float = 0.80
 
     # Radio máximo de búsqueda geográfica en km
     max_distancia_km: float = 10.0

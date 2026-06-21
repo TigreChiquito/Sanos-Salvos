@@ -22,9 +22,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
     email           VARCHAR(255) UNIQUE  NOT NULL,
     google_id       VARCHAR(255) UNIQUE  NOT NULL,
     foto_perfil_url TEXT,
-    telefono        VARCHAR(20),
-    notif_email     BOOLEAN              NOT NULL DEFAULT TRUE,
-    notif_sistema   BOOLEAN              NOT NULL DEFAULT TRUE,
     activo          BOOLEAN              DEFAULT TRUE,
     created_at      TIMESTAMPTZ          DEFAULT NOW(),
     updated_at      TIMESTAMPTZ          DEFAULT NOW()
@@ -62,6 +59,10 @@ CREATE TABLE IF NOT EXISTS reportes (
     -- Embedding vectorial para el Motor de Coincidencias
     -- Dimensión 512: compatible con CLIP ViT-B/32 y sentence-transformers
     embedding   vector(512),
+
+    -- Embeddings separados para scoring independiente
+    embedding_texto  vector(768),   -- texto puro (nombre+raza+color+desc), nativo 768D
+    embedding_imagen vector(512),   -- CLIP ViT-B/32 de la foto principal
 
     -- Relación con usuario
     usuario_id  UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -154,6 +155,10 @@ CREATE INDEX IF NOT EXISTS idx_reportes_embedding
     ON reportes USING ivfflat (embedding vector_cosine_ops)
     WITH (lists = 100);
 
+CREATE INDEX IF NOT EXISTS idx_reportes_embedding_texto
+    ON reportes USING ivfflat (embedding_texto vector_cosine_ops)
+    WITH (lists = 100);
+
 -- Fotos
 CREATE INDEX IF NOT EXISTS idx_fotos_reporte ON fotos(reporte_id);
 
@@ -207,3 +212,7 @@ BEGIN
             notificaciones;
     END IF;
 END $$;
+
+-- Migración: agregar columnas de embeddings separados (idempotente)
+ALTER TABLE reportes ADD COLUMN IF NOT EXISTS embedding_texto  vector(768);
+ALTER TABLE reportes ADD COLUMN IF NOT EXISTS embedding_imagen vector(512);

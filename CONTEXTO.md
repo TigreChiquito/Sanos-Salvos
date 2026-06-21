@@ -1,6 +1,6 @@
 # CONTEXTO DEL PROYECTO — Sanos & Salvos
 > Archivo de contexto para continuación de conversaciones con IA.
-> Última actualización: Mayo 2026.
+> Última actualización: Junio 2026.
 
 ---
 
@@ -112,11 +112,8 @@ POST /api/reportes (multipart/form-data + JWT)
 | MinIO | minio/minio:latest | 9000 (API), 9001 (console) |
 | micro-usuarios | build local | 8081 |
 | micro-mascotas | build local | 8082 |
-| micro-coincidencias | build local | 8083 ⚠️ conflicto con Debezium |
+| micro-coincidencias | build local | 8084 |
 | orquestador | build local | 8080 |
-
-> ⚠️ **Puerto 8083**: Debezium y micro-coincidencias comparten el puerto 8083.
-> Pendiente resolver: cambiar micro-coincidencias a puerto 8084 en docker-compose.yml y application.yml.
 
 ---
 
@@ -285,9 +282,13 @@ MAX_DISTANCIA_KM=10.0
 
 ### Tablas principales
 ```sql
-usuarios          -- id UUID, google_id, nombre, apellido, email, foto_perfil_url
+usuarios          -- id UUID, google_id, nombre, apellido, email, foto_perfil_url,
+                  --   telefono, notif_email, notif_sistema
 reportes          -- id UUID, usuario_id, tipo, animal, nombre, raza, color,
-                  --   tamano, descripcion, lat, lng, estado, embedding vector(512)
+                  --   tamano, descripcion, lat, lng, estado,
+                  --   embedding vector(512),           ← legacy (combinado)
+                  --   embedding_texto vector(768),     ← texto puro (768D nativo)
+                  --   embedding_imagen vector(512)     ← CLIP ViT-B/32
 fotos             -- id, reporte_id, bucket_key, url, orden
 coincidencias     -- id, reporte_perdido_id, reporte_encontrado_id,
                   --   score_total, score_nombre, score_raza, score_color,
@@ -300,6 +301,8 @@ notificaciones    -- id, usuario_id, coincidencia_id, leida
 -- Búsqueda vectorial de embeddings (pgvector)
 CREATE INDEX idx_reportes_embedding
   ON reportes USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX idx_reportes_embedding_texto
+  ON reportes USING ivfflat (embedding_texto vector_cosine_ops) WITH (lists = 100);
 
 -- Búsqueda geoespacial
 CREATE INDEX idx_reportes_ubicacion ON reportes (lat, lng);
@@ -328,7 +331,9 @@ PESOS = {
 
 - Si un campo es None, su peso se redistribuye proporcionalmente entre los demás.
 - Si `score_total ≥ MATCH_THRESHOLD (0.60)` → se crea un registro en `coincidencias`.
-- El embedding combinado (512D) = 60% text (sentence-transformer) + 40% image (CLIP).
+- `embedding_texto vector(768)`: generado por `paraphrase-multilingual-mpnet-base-v2` en dimensión nativa (sin truncar). Usado para el score de **descripción**.
+- `embedding_imagen vector(512)`: generado por CLIP `ViT-B/32`. Usado para el score de **imagen**. Si la foto falla (URL inválida, MinIO caído), es `null` y el peso se redistribuye.
+- Los embeddings de texto e imagen son **independientes** — el score de descripción e imagen pueden diferir.
 - Los modelos se descargan **durante el build del Docker image** para evitar lentitud en el primer arranque.
 
 ---
@@ -364,11 +369,11 @@ PESOS = {
 
 | Topic | Productor | Consumidor | Payload |
 |---|---|---|---|
-| `ss.reportes.sync` | micro-mascotas | micro-mascotas (ReporteSyncConsumer) | ReporteSyncEvent {tipo, payload} |
-| `ss.reportes.nuevo` | micro-mascotas | micro-coincidencias | {reporteId, tipo} |
-| `ss.coincidencias.creada` | micro-coincidencias | (pendiente: notificaciones) | CoincidenciaEvent |
-| `ss.usuarios.nuevo` | micro-usuarios | (pendiente: bienvenida) | UsuarioEvent |
-| `ss.public.*` | Debezium (CDC) | — | Cambios raw de PostgreSQL |
+| `ss.reportes.created` | Debezium (CDC) | micro-coincidencias | Nuevo reporte en PostgreSQL |
+| `ss.reportes.updated` | Debezium (CDC) | micro-coincidencias | Reporte actualizado |
+| `ss.coincidencias.found` | micro-coincidencias | (pendiente: notificaciones) | Match con score ≥ 0.60 |
+| `ss.public.reportes` | Debezium (CDC) | micro-mascotas (ReporteSyncConsumer) | Sync CQRS → MongoDB |
+| `ss.public.usuarios` | Debezium (CDC) | — | CDC de usuarios |
 
 ---
 
@@ -400,18 +405,17 @@ Fallbacks (HTTP 503):
 - [x] Debezium connector config
 - [x] micro-usuarios: OAuth2 Google, JWT, CRUD usuarios, Kafka producer
 - [x] micro-mascotas: CQRS (PG write + MongoDB read), MinIO fotos, Kafka producer+consumer
-- [x] micro-coincidencias: FastAPI, sentence-transformers, CLIP, pgvector, aiokafka, scoring 7D
+- [x] micro-coincidencias: FastAPI, sentence-transformers (768D), CLIP (512D), pgvector, aiokafka, scoring 7D con embeddings independientes
+- [x] Tests unitarios: pytest en micro-coincidencias (scoring_service, geo)
 - [x] Orquestador: Spring Cloud Gateway, JWT global filter, Circuit Breaker, CORS
 - [x] Frontend integrado: api.ts, auth.ts real, acceder.astro (OAuth2), MapView.tsx (fetch real), reportar.astro (POST real)
 - [x] Variables de entorno documentadas
 
 ### ⚠️ Pendiente / Issues conocidos
-- [ ] **Conflicto de puerto 8083**: Debezium y micro-coincidencias usan el mismo puerto. Solución: cambiar micro-coincidencias a 8084 en docker-compose.yml y su application.yml/Dockerfile.
-- [ ] Sistema de notificaciones: el topic `ss.coincidencias.creada` existe pero no hay consumer que notifique al usuario.
+- [ ] Sistema de notificaciones: el topic `ss.coincidencias.found` existe pero no hay consumer que notifique al usuario.
 - [ ] Soft delete en reportes: el estado "eliminado" está modelado pero falta lógica de visibilidad en los queries de MongoDB.
 - [ ] Paginación en GET /api/reportes: actualmente devuelve todos los reportes sin paginar (MongoDB).
 - [ ] Filtros geoespaciales en el endpoint de reportes: el mapa filtra en cliente, no en servidor.
-- [ ] Tests unitarios e integración: no existen aún.
 - [ ] CI/CD: no configurado.
 - [ ] Producción: variables de entorno, HTTPS, dominios reales.
 

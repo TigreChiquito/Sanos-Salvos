@@ -15,7 +15,7 @@ data:
   DEBEZIUM_URL: http://debezium:8083
 
   # ── Motor de Coincidencias ────────────────────────────────
-  MATCH_THRESHOLD: "0.60"
+  MATCH_THRESHOLD: "0.80"
   MAX_DISTANCIA_KM: "10.0"
 
   # ── Frontend ──────────────────────────────────────────────
