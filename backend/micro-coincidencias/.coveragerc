@@ -1,0 +1,13 @@
+[run]
+source = app
+omit =
+    app/database.py
+    app/main.py
+    app/metrics.py
+    app/kafka/*
+    app/routers/*
+    app/models/*
+    app/schemas/*
+
+[report]
+show_missing = true
