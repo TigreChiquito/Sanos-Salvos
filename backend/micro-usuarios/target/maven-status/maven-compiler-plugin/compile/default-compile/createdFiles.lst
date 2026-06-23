@@ -1,0 +1,10 @@
+cl/sanosysalvos/usuarios/model/Notificacion$NotificacionBuilder.class
+cl/sanosysalvos/usuarios/config/OpenApiConfig.class
+cl/sanosysalvos/usuarios/model/Notificacion.class
+cl/sanosysalvos/usuarios/dto/NotificacionDto$NotificacionDtoBuilder.class
+cl/sanosysalvos/usuarios/repository/NotificacionRepository.class
+cl/sanosysalvos/usuarios/dto/NotificacionDto.class
+cl/sanosysalvos/usuarios/service/NotificacionService.class
+cl/sanosysalvos/usuarios/controller/NotificacionController.class
+cl/sanosysalvos/usuarios/kafka/CoincidenciaEventConsumer.class
+cl/sanosysalvos/usuarios/dto/ActualizarPerfilDto.class

@@ -38,7 +38,7 @@ spring:
             scope:
               - email
               - profile
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "${OAUTH2_REDIRECT_URI:http://localhost:8080/login/oauth2/code/google}"
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
@@ -56,6 +56,15 @@ spring:
       retries: 3
       properties:
         spring.json.add.type.headers: false
+    consumer:
+      group-id: ss-notificaciones
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: "false"
+        spring.json.value.default.type: java.util.HashMap
 
 # ── Configuración propia de la app ──────────────────────────
 app:
@@ -84,3 +93,18 @@ logging:
     cl.sanosysalvos: DEBUG
     org.springframework.security: INFO
     org.springframework.kafka: WARN
+
+# Actuator + Prometheus
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: micro-usuarios

@@ -357,7 +357,7 @@ services:
     networks:
       - ss-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -449,7 +449,7 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     ports:
-      - "8080:8080"
+      - "8090:8080"
     networks:
       - ss-network
 
